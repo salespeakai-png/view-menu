@@ -210,14 +210,10 @@ function updateCartBar() {
 /* ===============================
    PLACE ORDER (BACKEND)
    =============================== */
-async function placeOrder() {
-  if (!cart.length) return;
-
-  const payload = {
-    slug,
-    items: cart,
-    order_type: "dine-in"
-  };
+function placeOrder() {
+  localStorage.setItem("cart", JSON.stringify(cart));
+  window.location.href = "checkout.html?slug=" + slug;
+}
 
   const res = await fetch("http://localhost:5000/api/order/create", {
     method: "POST",
@@ -240,3 +236,4 @@ async function placeOrder() {
    START
    =============================== */
 loadMenu();
+
