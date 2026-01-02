@@ -125,19 +125,17 @@ function renderCategories(categories, products) {
 }
 
 /* ===============================
-   PRODUCTS – FINAL FIX
+   PRODUCTS – FINAL CORRECT FIX
    =============================== */
 function renderProducts(category, products) {
   productsDiv.innerHTML = "";
   productsDiv.style.opacity = 0;
 
-  const cid = norm(category.id);
-  const cname = norm(category.name);
+  const cid = String(category.id).trim();
 
-  const list = products.filter(p => {
-    const pc = norm(p.category_id);
-    return pc === cid || pc === cname;
-  });
+  const list = products.filter(
+    p => String(p.categoryId).trim() === cid
+  );
 
   if (!list.length) {
     productsDiv.innerHTML = "<p>No products</p>";
@@ -150,13 +148,16 @@ function renderProducts(category, products) {
     card.className = "product";
 
     card.innerHTML = `
-      <img src="${p.image}" loading="lazy"
-        onerror="this.src='assets/placeholder.png'">
+      <img 
+        src="${p.image}" 
+        loading="lazy"
+        onerror="this.src='assets/placeholder.png'"
+      >
 
       <div class="product-info">
         <div class="product-title">
           <img class="veg-icon"
-               src="assets/${norm(p.veg) === "nonveg" ? "nonveg" : "veg"}.png">
+               src="assets/${p.veg === "nonveg" ? "nonveg" : "veg"}.png">
           <h3>${p.name}</h3>
         </div>
 
@@ -174,7 +175,9 @@ function renderProducts(category, products) {
               : ""
           }
         </div>
-      </div>`;
+      </div>
+    `;
+
     productsDiv.appendChild(card);
   });
 
@@ -228,4 +231,5 @@ function goCheckout() {
    START
    =============================== */
 loadMenu();
+
 
