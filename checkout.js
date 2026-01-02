@@ -1,62 +1,66 @@
 /* ===============================
-   CHECKOUT – PHASE 2
+   CHECKOUT – FINAL FRONTEND ONLY
+   GitHub Pages + Offline Safe
    =============================== */
 
 const params = new URLSearchParams(location.search);
-const slug = params.get("slug");
+const slug = params.get("slug") || "barfmalai";
 
 const cart = JSON.parse(localStorage.getItem("cart") || "[]");
 
 const orderItemsDiv = document.getElementById("orderItems");
 const orderTotalSpan = document.getElementById("orderTotal");
 
-/* RENDER ITEMS */
 let total = 0;
 
-cart.forEach(item => {
-  total += item.price * item.qty;
+/* ===============================
+   RENDER CART ITEMS
+   =============================== */
 
-  const div = document.createElement("div");
-  div.className = "order-item";
-  div.innerHTML = `
-    <span>${item.name} × ${item.qty}</span>
-    <span>₹${item.price * item.qty}</span>
-  `;
-  orderItemsDiv.appendChild(div);
-});
+if (!cart.length) {
+  orderItemsDiv.innerHTML =
+    "<p style='opacity:.7'>No items in cart</p>";
+} else {
+  cart.forEach(item => {
+    const itemTotal = item.price * item.qty;
+    total += itemTotal;
+
+    const div = document.createElement("div");
+    div.className = "order-item";
+    div.innerHTML = `
+      <span>${item.name} × ${item.qty}</span>
+      <span>₹${itemTotal}</span>
+    `;
+    orderItemsDiv.appendChild(div);
+  });
+}
 
 orderTotalSpan.innerText = total;
 
-/* CONFIRM ORDER */
-async function confirmOrder() {
+/* ===============================
+   CONFIRM ORDER (NO API)
+   =============================== */
+
+function confirmOrder() {
   if (!cart.length) {
     alert("Cart empty");
     return;
   }
 
-  const payload = {
+  const order = {
     slug,
     items: cart,
     total,
     order_type: document.getElementById("orderType").value,
-    customer_name: document.getElementById("custName").value,
-    customer_mobile: document.getElementById("custMobile").value
+    customer_name: document.getElementById("custName").value || "",
+    customer_mobile: document.getElementById("custMobile").value || "",
+    time: new Date().toLocaleString()
   };
 
-  const res = await fetch("http://localhost:5000/api/order/create", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
+  console.log("ORDER DATA:", order);
 
-  const data = await res.json();
-
-  if (!res.ok) {
-    alert(data.error || "Order failed");
-    return;
-  }
+  alert("Order placed successfully!");
 
   localStorage.removeItem("cart");
-  alert("Order placed successfully!");
   location.href = "menu.html?slug=" + slug;
 }
