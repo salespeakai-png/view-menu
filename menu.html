@@ -1,47 +1,37 @@
 <!DOCTYPE html>
-
-  <p id="offlineMsg" style="display:none;text-align:center;color:#f5d27a">
-  Offline Mode – Showing last saved menu
-</p>
-
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Menu</title>
-<link rel="stylesheet" href="style.css">
+
+<link rel="stylesheet" href="style.css?v=1" />
 </head>
 
 <body>
 
+<p id="loadingText" style="text-align:center;margin-top:40px;color:#f5d27a">
+  Loading menu…
+</p>
+
 <div id="menu">
 
   <div class="menu-header">
-    <img id="menuLogo">
+    <img id="menuLogo" />
     <h2 id="menuName"></h2>
   </div>
 
-  <div class="category-wrap">
-    <div id="categories"></div>
-    <div class="cat-hint">›</div>
-  </div>
-  
-    
-  <div id="products">
-    <div id="skeletons"></div>
-  </div>  
+  <div id="categories"></div>
+
+  <!-- Skeleton -->
+  <div id="skeletons"></div>
+
+  <!-- Products -->
   <div id="products"></div>
 
   <footer>Powered by <b>Go Digital</b></footer>
 </div>
 
-<script src="app.js"></script>
-  
-
+<script src="app.js?v=1"></script>
 </body>
 </html>
-
-
-
-
-
