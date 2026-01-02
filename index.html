@@ -48,35 +48,49 @@ body::before{
   pointer-events:none;
 }
 
-/* ================= SPLASH WRAP ================= */
-
+/* ===== CENTER WRAP ===== */
 .wrap{
   position:relative;
   z-index:2;
   text-align:center;
-  animation:cinematicIn 1.4s cubic-bezier(.22,1,.36,1) forwards;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
 }
 
-/* ================= LOGO ================= */
+/* ===== LOGO BOX (CONTROL AREA) ===== */
+.logo-box{
+  width:160px;          /* FINAL CONTROL */
+  height:160px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:16px;
+}
 
-.splash-logo{
-  width:180px;            /* mobile */
-  max-width:70vw;
-  height:auto;
-  margin:0 auto 18px;
+/* ===== LOGO IMAGE ===== */
+.logo-box img{
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;   /* 🔥 MOST IMPORTANT */
   display:block;
-  filter: drop-shadow(0 12px 28px rgba(0,0,0,.6));
-  animation:logoFloat 4s ease-in-out infinite;
 }
 
 /* Tablet */
 @media (min-width:600px){
-  .splash-logo{ width:220px; }
+  .logo-box{
+    width:200px;
+    height:200px;
+  }
 }
 
 /* Desktop */
 @media (min-width:1024px){
-  .splash-logo{ width:260px; }
+  .logo-box{
+    width:220px;
+    height:220px;
+  }
 }
 
 /* ================= TEXT ================= */
@@ -148,11 +162,13 @@ p{
 <body>
 
 <div class="wrap">
-  <img
-    src="https://raw.githubusercontent.com/salespeakai-png/view-menu/main/assets/logo1.png"
-    class="splash-logo"
-    alt="Barf Malai Logo"
-  >
+  <div class="logo-box">
+    <img
+      src="https://raw.githubusercontent.com/salespeakai-png/view-menu/main/assets/logo1.png"
+      alt="Barf Malai Logo"
+    >
+  </div>
+
   <h1>BARF MALAI</h1>
   <div class="divider"></div>
   <p>Premium Ice Cream Experience</p>
@@ -167,3 +183,4 @@ p{
 
 </body>
 </html>
+
