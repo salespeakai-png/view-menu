@@ -1,4 +1,4 @@
-const CACHE_NAME = "barfmalai-v1";
+const CACHE_NAME = "barfmalai-v2";
 
 const STATIC_ASSETS = [
   "./",
@@ -11,7 +11,6 @@ const STATIC_ASSETS = [
   "assets/placeholder.png"
 ];
 
-/* INSTALL */
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
@@ -19,23 +18,20 @@ self.addEventListener("install", event => {
   self.skipWaiting();
 });
 
-/* ACTIVATE */
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys.map(k => k !== CACHE_NAME && caches.delete(k))
-      )
+      Promise.all(keys.map(k => k !== CACHE_NAME && caches.delete(k)))
     )
   );
   self.clients.claim();
 });
 
-/* FETCH */
+/* 🔥 SAFE FETCH STRATEGY */
 self.addEventListener("fetch", event => {
   const req = event.request;
 
-  /* Google Apps Script API – NETWORK FIRST */
+  /* API – NETWORK FIRST, FALLBACK TO CACHE */
   if (req.url.includes("script.google.com")) {
     event.respondWith(
       fetch(req)
@@ -44,13 +40,20 @@ self.addEventListener("fetch", event => {
           caches.open(CACHE_NAME).then(c => c.put(req, clone));
           return res;
         })
-        .catch(() => caches.match(req))
+        .catch(() => {
+          return caches.match(req).then(cached => {
+            return cached || new Response(
+              JSON.stringify({ error: "OFFLINE_NO_CACHE" }),
+              { headers: { "Content-Type": "application/json" } }
+            );
+          });
+        })
     );
     return;
   }
 
-  /* STATIC FILES – CACHE FIRST */
+  /* STATIC FILES */
   event.respondWith(
-    caches.match(req).then(cached => cached || fetch(req))
+    caches.match(req).then(res => res || fetch(req))
   );
 });
