@@ -1,13 +1,13 @@
 /* ===============================
-   BARF MALAI – FINAL FIXED APP.JS
-   PHASE 1 + PHASE 2 STABLE
+   DIGITAL MENU – FINAL BULLETPROOF APP.JS
+   PHASE 1 + PHASE 2 SAFE
    =============================== */
 
-/* 🔹 GET SLUG */
+/* 🔹 SLUG */
 const params = new URLSearchParams(window.location.search);
 const slug = params.get("slug") || "barfmalai";
 
-/* 🔹 API URL */
+/* 🔹 API */
 const API_URL =
   "https://script.google.com/macros/s/AKfycbwh-eNLy81JK6AvwQQF-H7flEDANpUjHTv7Y2ubdnqGRO4IzhRf6HT1AZSzkqCqiyM8/exec?slug=" +
   slug;
@@ -25,13 +25,19 @@ let CART_ENABLED = false;
 let cart = [];
 
 /* ===============================
+   UTIL
+   =============================== */
+function norm(v) {
+  return String(v ?? "").trim().toLowerCase();
+}
+
+/* ===============================
    SKELETON
    =============================== */
 function showSkeletons(count = 4) {
   if (!skeletonsDiv) return;
-  skeletonsDiv.innerHTML = "";
   skeletonsDiv.style.display = "block";
-
+  skeletonsDiv.innerHTML = "";
   for (let i = 0; i < count; i++) {
     skeletonsDiv.innerHTML += `
       <div class="skeleton-card">
@@ -41,8 +47,7 @@ function showSkeletons(count = 4) {
           <div class="skeleton-line short"></div>
           <div class="skeleton-line price"></div>
         </div>
-      </div>
-    `;
+      </div>`;
   }
 }
 
@@ -53,11 +58,10 @@ function hideSkeletons() {
 }
 
 /* ===============================
-   FETCH MENU
+   LOAD MENU
    =============================== */
 async function loadMenu() {
   showSkeletons();
-
   try {
     const res = await fetch(API_URL);
     const data = await res.json();
@@ -66,22 +70,18 @@ async function loadMenu() {
       location.href = "menu-off.html?slug=" + slug;
       return;
     }
-
-    if (data.error) throw new Error(data.error);
+    if (data.error) throw data.error;
 
     initMenu(data);
-  } catch (err) {
-    console.error("Menu error:", err);
-    document.body.innerHTML = `
-      <div style="color:#fff;text-align:center;margin-top:40px">
-        Unable to load menu
-      </div>
-    `;
+  } catch (e) {
+    console.error(e);
+    document.body.innerHTML =
+      "<p style='text-align:center;color:#fff;margin-top:40px'>Menu load failed</p>";
   }
 }
 
 /* ===============================
-   INIT MENU
+   INIT
    =============================== */
 function initMenu(data) {
   hideSkeletons();
@@ -104,21 +104,17 @@ function initMenu(data) {
    =============================== */
 function renderCategories(categories, products) {
   categoriesDiv.innerHTML = "";
+  if (!categories || !categories.length) return;
 
-  if (!categories || !categories.length) {
-    categoriesDiv.innerHTML = "<p>No categories</p>";
-    return;
-  }
-
-  categories.forEach((cat, index) => {
+  categories.forEach((cat, i) => {
     const el = document.createElement("div");
-    el.className = "category" + (index === 0 ? " active" : "");
+    el.className = "category" + (i === 0 ? " active" : "");
     el.innerText = cat.name;
 
     el.onclick = () => {
-      document.querySelectorAll(".category").forEach(c =>
-        c.classList.remove("active")
-      );
+      document
+        .querySelectorAll(".category")
+        .forEach(c => c.classList.remove("active"));
       el.classList.add("active");
       renderProducts(cat, products);
     };
@@ -127,20 +123,22 @@ function renderCategories(categories, products) {
   });
 
   renderProducts(categories[0], products);
-
 }
 
 /* ===============================
-   PRODUCTS (🔥 FIXED HERE)
+   PRODUCTS – FINAL FIX
    =============================== */
 function renderProducts(category, products) {
   productsDiv.innerHTML = "";
   productsDiv.style.opacity = 0;
 
-  const list = products.filter(p =>
-    String(p.category_id).toLowerCase() === String(category.id).toLowerCase() ||
-    String(p.category_id).toLowerCase() === String(category.name).toLowerCase()
-  );
+  const cid = norm(category.id);
+  const cname = norm(category.name);
+
+  const list = products.filter(p => {
+    const pc = norm(p.category_id);
+    return pc === cid || pc === cname;
+  });
 
   if (!list.length) {
     productsDiv.innerHTML = "<p>No products</p>";
@@ -159,7 +157,7 @@ function renderProducts(category, products) {
       <div class="product-info">
         <div class="product-title">
           <img class="veg-icon"
-               src="assets/${p.veg === "nonveg" ? "nonveg" : "veg"}.png">
+               src="assets/${norm(p.veg) === "nonveg" ? "nonveg" : "veg"}.png">
           <h3>${p.name}</h3>
         </div>
 
@@ -177,17 +175,12 @@ function renderProducts(category, products) {
               : ""
           }
         </div>
-      </div>
-    `;
-
+      </div>`;
     productsDiv.appendChild(card);
   });
 
-  requestAnimationFrame(() => {
-    productsDiv.style.opacity = 1;
-  });
+  requestAnimationFrame(() => (productsDiv.style.opacity = 1));
 }
-
 
 /* ===============================
    CART
@@ -199,10 +192,8 @@ function changeQty(id, diff) {
     item.qty += diff;
     if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
   }
-
   document.getElementById("q_" + id).innerText =
     cart.find(i => i.id === id)?.qty || 0;
-
   updateCartBar();
 }
 
@@ -214,15 +205,13 @@ function initCartBar() {
   bar.id = "cartBar";
   bar.innerHTML = `
     <span id="cartText"></span>
-    <button onclick="goCheckout()">Checkout</button>
-  `;
+    <button onclick="goCheckout()">Checkout</button>`;
   document.body.appendChild(bar);
 }
 
 function updateCartBar() {
   const bar = document.getElementById("cartBar");
   if (!bar) return;
-
   const total = cart.reduce((s, i) => s + i.qty, 0);
   bar.style.display = total ? "flex" : "none";
   document.getElementById("cartText").innerText = `${total} items`;
@@ -240,5 +229,3 @@ function goCheckout() {
    START
    =============================== */
 loadMenu();
-
-
