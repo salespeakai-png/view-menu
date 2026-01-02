@@ -1,6 +1,5 @@
 /* ===============================
-   DIGITAL MENU – FINAL BULLETPROOF APP.JS
-   PHASE 1 + PHASE 2 SAFE
+   DIGITAL MENU – FINAL FIXED APP.JS
    =============================== */
 
 /* 🔹 SLUG */
@@ -24,11 +23,9 @@ let CART_ENABLED = false;
 let cart = [];
 
 /* ===============================
-   UTIL
+   HELPERS
    =============================== */
-function norm(v) {
-  return String(v ?? "").trim().toLowerCase();
-}
+const norm = v => String(v ?? "").trim().toLowerCase();
 
 /* ===============================
    SKELETON
@@ -125,20 +122,27 @@ function renderCategories(categories, products) {
 }
 
 /* ===============================
-   PRODUCTS – FINAL CORRECT FIX
+   PRODUCTS – 🔥 REAL FIX
    =============================== */
 function renderProducts(category, products) {
   productsDiv.innerHTML = "";
   productsDiv.style.opacity = 0;
 
-  const cid = String(category.id).trim();
+  const cid = norm(category.id);
+  const cname = norm(category.name);
 
-  const list = products.filter(
-    p => String(p.categoryId).trim() === cid
-  );
+  const list = products.filter(p => {
+    const pid =
+      norm(p.categoryId) ||
+      norm(p.category_id) ||
+      norm(p.category);
+
+    return pid === cid || pid === cname;
+  });
 
   if (!list.length) {
-    productsDiv.innerHTML = "<p>No products</p>";
+    productsDiv.innerHTML =
+      "<p style='color:#fff;margin-top:20px'>No products</p>";
     productsDiv.style.opacity = 1;
     return;
   }
@@ -148,16 +152,14 @@ function renderProducts(category, products) {
     card.className = "product";
 
     card.innerHTML = `
-      <img 
-        src="${p.image}" 
-        loading="lazy"
-        onerror="this.src='assets/placeholder.png'"
-      >
+      <img src="${p.image}" loading="lazy"
+           onload="this.classList.add('loaded')"
+           onerror="this.src='assets/placeholder.png'">
 
       <div class="product-info">
         <div class="product-title">
           <img class="veg-icon"
-               src="assets/${p.veg === "nonveg" ? "nonveg" : "veg"}.png">
+               src="assets/${norm(p.veg) === "nonveg" ? "nonveg" : "veg"}.png">
           <h3>${p.name}</h3>
         </div>
 
@@ -175,9 +177,7 @@ function renderProducts(category, products) {
               : ""
           }
         </div>
-      </div>
-    `;
-
+      </div>`;
     productsDiv.appendChild(card);
   });
 
@@ -231,5 +231,3 @@ function goCheckout() {
    START
    =============================== */
 loadMenu();
-
-
