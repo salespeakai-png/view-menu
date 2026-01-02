@@ -166,24 +166,16 @@ body{
 
 /* ===== IMAGE LAZY LOAD ===== */
 
-/* PRODUCT IMAGE */
-.product img {
-  width: 80px;
-  height: 80px;
-  border-radius: 12px;
-  object-fit: cover;
-
-  /* BLUR DEFAULT */
+.product img{
   filter: blur(10px);
-  transform: scale(1.05);
-  transition: filter 0.4s ease, transform 0.4s ease;
+  transition: filter .4s ease, transform .4s ease;
 }
 
-/* REMOVE BLUR AFTER LOAD */
-.product img.loaded {
+.product img.loaded{
   filter: blur(0);
   transform: scale(1);
 }
+
 
 
 /* ===== PREMIUM PRODUCT CARD (FINAL) ===== */
@@ -330,4 +322,5 @@ footer{
   font-size:13px;
   opacity:.65;
 }
+
 
