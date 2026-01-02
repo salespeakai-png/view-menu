@@ -9,8 +9,7 @@ const slug = params.get("slug") || "barfmalai";
 
 /* 🔹 API */
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbwh-eNLy81JK6AvwQQF-H7flEDANpUjHTv7Y2ubdnqGRO4IzhRf6HT1AZSzkqCqiyM8/exec?slug=" +
-  slug;
+  "https://script.google.com/macros/s/AKfycbwh-eNLy81JK6AvwQQF-H7flEDANpUjHTv7Y2ubdnqGRO4IzhRf6HT1AZSzkqCqiyM8/exec?slug=" +slug;
 
 /* 🔹 DOM */
 const menuLogo = document.getElementById("menuLogo");
@@ -229,3 +228,4 @@ function goCheckout() {
    START
    =============================== */
 loadMenu();
+
