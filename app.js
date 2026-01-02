@@ -120,24 +120,26 @@ function renderCategories(categories, products) {
         c.classList.remove("active")
       );
       el.classList.add("active");
-      renderProducts(cat.id, products);
+      renderProducts(cat, products);
     };
 
     categoriesDiv.appendChild(el);
   });
 
-  renderProducts(categories[0].id, products);
+  renderProducts(categories[0], products);
+
 }
 
 /* ===============================
    PRODUCTS (🔥 FIXED HERE)
    =============================== */
-function renderProducts(categoryId, products) {
+function renderProducts(category, products) {
   productsDiv.innerHTML = "";
   productsDiv.style.opacity = 0;
 
-  const list = products.filter(
-    p => String(p.category_id) === String(categoryId)
+  const list = products.filter(p =>
+    String(p.category_id).toLowerCase() === String(category.id).toLowerCase() ||
+    String(p.category_id).toLowerCase() === String(category.name).toLowerCase()
   );
 
   if (!list.length) {
@@ -153,26 +155,31 @@ function renderProducts(categoryId, products) {
     card.innerHTML = `
       <img src="${p.image}" loading="lazy"
         onerror="this.src='assets/placeholder.png'">
+
       <div class="product-info">
         <div class="product-title">
-          <img class="veg-icon" src="assets/${p.veg === "nonveg" ? "nonveg" : "veg"}.png">
+          <img class="veg-icon"
+               src="assets/${p.veg === "nonveg" ? "nonveg" : "veg"}.png">
           <h3>${p.name}</h3>
         </div>
+
         <p>${p.desc || ""}</p>
+
         <div class="price-row">
           <span class="price">₹${p.price}</span>
           ${
             CART_ENABLED
               ? `<div class="qty">
-                  <button onclick="changeQty(${p.id}, -1)">−</button>
-                  <span id="q_${p.id}">0</span>
-                  <button onclick="changeQty(${p.id}, 1)">+</button>
-                </div>`
+                   <button onclick="changeQty(${p.id}, -1)">−</button>
+                   <span id="q_${p.id}">0</span>
+                   <button onclick="changeQty(${p.id}, 1)">+</button>
+                 </div>`
               : ""
           }
         </div>
       </div>
     `;
+
     productsDiv.appendChild(card);
   });
 
@@ -180,6 +187,7 @@ function renderProducts(categoryId, products) {
     productsDiv.style.opacity = 1;
   });
 }
+
 
 /* ===============================
    CART
@@ -232,4 +240,5 @@ function goCheckout() {
    START
    =============================== */
 loadMenu();
+
 
