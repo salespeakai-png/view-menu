@@ -1,35 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Checkout</title>
-  <link rel="stylesheet" href="styles.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Checkout</title>
+
+<style>
+:root{
+  --bg:#2a070a;
+  --gold:#d4af37;
+  --card:#ffffff;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+body{
+  background:linear-gradient(135deg,#4a0d14,#2a070a);
+  color:#222;
+  min-height:100vh;
+  padding-bottom:90px;
+}
+
+/* ================= HEADER ================= */
+.header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:16px;
+  color:#f5d27a;
+}
+
+.header h2{
+  font-size:20px;
+  letter-spacing:1px;
+}
+
+/* ================= CONTAINER ================= */
+.checkout-container{
+  padding:16px;
+}
+
+/* ================= ORDER ITEM ================= */
+.order-item{
+  background:rgba(255,255,255,.95);
+  border-radius:18px;
+  padding:14px;
+  margin-bottom:14px;
+  box-shadow:0 10px 24px rgba(0,0,0,.35);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.order-item h4{
+  font-size:15px;
+  font-weight:700;
+}
+
+.order-item span{
+  font-size:14px;
+  font-weight:700;
+  color:#2a070a;
+}
+
+/* ================= TOTAL ================= */
+.total-box{
+  background:linear-gradient(135deg,#f3d98b,#d4af37);
+  border-radius:16px;
+  padding:14px;
+  font-size:18px;
+  font-weight:900;
+  text-align:center;
+  color:#2a070a;
+  margin:18px 0;
+}
+
+/* ================= FORM ================= */
+.form{
+  background:rgba(255,255,255,.95);
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 10px 24px rgba(0,0,0,.35);
+}
+
+.form input,
+.form select{
+  width:100%;
+  padding:12px 14px;
+  margin-bottom:12px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  font-size:14px;
+}
+
+/* ================= FIXED CHECKOUT BAR ================= */
+.checkout-bar{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  background:linear-gradient(135deg,#f3d98b,#d4af37);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 18px;
+  box-shadow:0 -6px 22px rgba(0,0,0,.35);
+}
+
+.checkout-bar span{
+  font-size:16px;
+  font-weight:900;
+  color:#2a070a;
+}
+
+.checkout-bar button{
+  padding:12px 22px;
+  border:none;
+  border-radius:999px;
+  background:#2a070a;
+  color:#f5d27a;
+  font-size:14px;
+  font-weight:800;
+  cursor:pointer;
+}
+</style>
 </head>
+
 <body>
 
-  <div class="checkout-container">
-    <h2>Order Summary</h2>
+<div class="header">
+  <h2>Order Summary</h2>
+</div>
 
-    <div id="orderItems"></div>
+<div class="checkout-container">
+  <div id="orderItems"></div>
 
-    <div class="total">
-      Total: ₹<span id="orderTotal">0</span>
-    </div>
-
-    <div class="form">
-      <input id="custName" placeholder="Your name (optional)" />
-      <input id="custMobile" placeholder="Mobile number (optional)" />
-
-      <select id="orderType">
-        <option value="dine-in">Dine In</option>
-        <option value="takeaway">Takeaway</option>
-      </select>
-    </div>
-
-    <button onclick="confirmOrder()">Confirm Order</button>
+  <div class="total-box">
+    Total: ₹<span id="orderTotal">0</span>
   </div>
 
-  <script src="checkout.js"></script>
+  <div class="form">
+    <input id="custName" placeholder="Your name (optional)" />
+    <input id="custMobile" placeholder="Mobile number (optional)" />
+
+    <select id="orderType">
+      <option value="dine-in">Dine In</option>
+      <option value="takeaway">Takeaway</option>
+    </select>
+  </div>
+</div>
+
+<div class="checkout-bar">
+  <span>Pay at Counter</span>
+  <button onclick="confirmOrder()">Confirm</button>
+</div>
+
+<script>
+/* ================= CART LOAD ================= */
+const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+const itemsDiv = document.getElementById("orderItems");
+const totalSpan = document.getElementById("orderTotal");
+
+let total = 0;
+
+/* ⚠️ SIMPLE PRICE MAP (SHEET PRICE ALREADY FINAL) */
+cart.forEach(item=>{
+  const row = document.createElement("div");
+  row.className = "order-item";
+  row.innerHTML = `
+    <h4>Item ID: ${item.id}</h4>
+    <span>Qty: ${item.qty}</span>
+  `;
+  itemsDiv.appendChild(row);
+});
+
+/* NOTE:
+   Total already calculated in menu page visually
+   If you want exact price mapping → Phase 3 API hook
+*/
+
+totalSpan.innerText = cart.reduce((s,i)=>s+i.qty*10,0);
+
+/* ================= CONFIRM ================= */
+function confirmOrder(){
+  alert("Order placed successfully!");
+  localStorage.removeItem("cart");
+  location.href = "menu.html";
+}
+</script>
+
 </body>
 </html>
