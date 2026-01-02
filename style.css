@@ -1,9 +1,9 @@
-
 :root{
   --theme-bg:#2a070a;
   --theme-gold:#d4af37;
   --card-bg:rgba(255,255,255,.95);
 }
+
 *{
   margin:0;
   padding:0;
@@ -16,13 +16,15 @@ body{
   color:#f7f5f2;
 }
 
-/* APP CONTAINER */
+/* ================= APP CONTAINER ================= */
+
 #menu{
   padding:16px;
   min-height:100vh;
 }
 
 /* ================= HEADER ================= */
+
 .menu-header{
   display:flex;
   align-items:center;
@@ -49,7 +51,7 @@ body{
   color:#f5d27a;
 }
 
-/* ===== PREMIUM CATEGORY BAR ===== */
+/* ================= CATEGORY BAR ================= */
 
 #categories{
   display:flex;
@@ -68,7 +70,6 @@ body{
   );
 }
 
-/* hide scrollbar */
 #categories::-webkit-scrollbar{
   display:none;
 }
@@ -80,14 +81,11 @@ body{
   text-align:center;
   font-size:14px;
   font-weight:600;
-  letter-spacing:.4px;
   cursor:pointer;
   white-space:nowrap;
-
   background:rgba(255,255,255,.08);
   border:1px solid rgba(212,175,55,.25);
   color:#f7f5f2;
-
   transition:all .25s ease;
 }
 
@@ -97,106 +95,51 @@ body{
   box-shadow:0 6px 18px rgba(212,175,55,.45);
 }
 
-/* ===== CATEGORY SLIDE HINT (FINAL) ===== */
-
-.category-wrap{
-  position:relative;
-}
-
-/* Arrow hint */
-.cat-hint{
-  position:absolute;
-  right:6px;
-  top:50%;
-  transform:translateY(-50%);
-  width:28px;
-  height:28px;
-  border-radius:50%;
-  background:linear-gradient(135deg,#f3d98b,#d4af37);
-  color:#2a070a;
-  font-size:18px;
-  font-weight:900;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  box-shadow:0 6px 16px rgba(212,175,55,.45);
-  pointer-events:none;
-  animation:hintPulse 1.6s infinite;
-}
-
-/* fade edge */
-.category-wrap::after{
-  content:"";
-  position:absolute;
-  top:0;
-  right:0;
-  width:40px;
-  height:100%;
-  pointer-events:none;
-  background:linear-gradient(
-    to right,
-    transparent,
-    rgba(42,7,10,.95)
-  );
-}
-
-/* pulse animation */
-@keyframes hintPulse{
-  0%,100%{opacity:.6}
-  50%{opacity:1}
-}
-
-
-/* ===== PRODUCT TRANSITION ===== */
+/* ================= PRODUCTS ================= */
 
 #products{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
   animation:fadeSlideIn .35s ease;
 }
 
 @keyframes fadeSlideIn{
-  from{
-    opacity:0;
-    transform:translateY(10px);
-  }
-  to{
-    opacity:1;
-    transform:none;
-  }
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:none;}
 }
 
-/* ===== IMAGE LAZY LOAD ===== */
-
-.product img{
-  filter: blur(10px);
-  transition: filter .4s ease, transform .4s ease;
-}
-
-.product img.loaded{
-  filter: blur(0);
-  transform: scale(1);
-}
-
-
-
-/* ===== PREMIUM PRODUCT CARD (FINAL) ===== */
+/* ================= PRODUCT CARD ================= */
 
 .product{
+  max-width:720px;
+  width:100%;
+  margin:0 auto;
   display:flex;
   gap:14px;
   padding:16px;
-  margin-bottom:18px;
   background:rgba(255,255,255,.95);
   border-radius:20px;
   box-shadow:0 10px 26px rgba(0,0,0,.35);
 }
 
+/* PRODUCT IMAGE (BLUR SAFE) */
 .product img{
   width:88px;
   height:88px;
   border-radius:16px;
   object-fit:cover;
   box-shadow:0 6px 14px rgba(0,0,0,.25);
+
+  filter:blur(12px);
+  transition:filter .4s ease;
 }
+
+.product img.loaded{
+  filter:blur(0);
+}
+
+/* ================= PRODUCT INFO ================= */
 
 .product-info{
   flex:1;
@@ -208,22 +151,19 @@ body{
 .product-title{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:6px;
 }
 
-/* Veg / Non-veg dot */
-.veg-dot{
-  width:9px;
-  height:9px;
-  border-radius:50%;
-  background:#1fa24a;
-  box-shadow:0 0 0 3px rgba(31,162,74,.18);
+/* ================= VEG / NON-VEG ICON (FIXED) ================= */
+
+.veg-icon{
+  width:12px;
+  height:12px;
+  flex-shrink:0;
+  filter:none !important;
 }
 
-.veg-dot.nonveg{
-  background:#c0392b;
-  box-shadow:0 0 0 3px rgba(192,57,43,.2);
-}
+/* ================= TEXT ================= */
 
 .product-info h3{
   font-size:16px;
@@ -237,7 +177,8 @@ body{
   margin:4px 0 8px;
 }
 
-/* Price chip */
+/* ================= PRICE ================= */
+
 .price{
   align-self:flex-start;
   padding:4px 12px;
@@ -248,8 +189,7 @@ body{
   border-radius:999px;
 }
 
-
-/* ================= SKELETON LOADER ================= */
+/* ================= SKELETON ================= */
 
 #skeletons{
   display:flex;
@@ -274,9 +214,7 @@ body{
   background:#e6e6e6;
 }
 
-.skeleton-lines{
-  flex:1;
-}
+.skeleton-lines{flex:1;}
 
 .skeleton-line{
   height:12px;
@@ -285,17 +223,9 @@ body{
   margin-bottom:10px;
 }
 
-.skeleton-line.short{
-  width:60%;
-}
+.skeleton-line.short{width:60%;}
+.skeleton-line.price{width:40%;height:14px;border-radius:999px;}
 
-.skeleton-line.price{
-  width:40%;
-  height:14px;
-  border-radius:999px;
-}
-
-/* shimmer animation */
 .skeleton-card::after{
   content:"";
   position:absolute;
@@ -314,8 +244,8 @@ body{
   to{transform:translateX(100%)}
 }
 
-
 /* ================= FOOTER ================= */
+
 footer{
   text-align:center;
   margin:34px 0 12px;
@@ -323,4 +253,10 @@ footer{
   opacity:.65;
 }
 
+/* ================= MOBILE ================= */
 
+@media(max-width:768px){
+  .product{
+    max-width:100%;
+  }
+}
