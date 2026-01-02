@@ -1,5 +1,5 @@
 /* ===============================
-   CHECKOUT – FINAL FIXED
+   CHECKOUT – FINAL GOOGLE SHEET
    =============================== */
 
 const params = new URLSearchParams(location.search);
@@ -13,60 +13,71 @@ const orderTotalSpan = document.getElementById("orderTotal");
 let total = 0;
 
 /* ===============================
-   RENDER ORDER ITEMS
+   RENDER CART
    =============================== */
-
 orderItemsDiv.innerHTML = "";
 
 if (!cart.length) {
-  orderItemsDiv.innerHTML =
-    "<p style='opacity:.7'>No items in cart</p>";
+  orderItemsDiv.innerHTML = "<p>No items in cart</p>";
 } else {
   cart.forEach(item => {
     const itemTotal = item.price * item.qty;
     total += itemTotal;
 
-    const div = document.createElement("div");
-    div.className = "order-item";
-    div.innerHTML = `
-      <div style="display:flex;justify-content:space-between;width:100%">
-        <span style="font-weight:600">
-          ${item.name} × ${item.qty}
-        </span>
-        <span style="font-weight:700">
-          ₹${itemTotal}
-        </span>
-      </div>
+    const row = document.createElement("div");
+    row.className = "order-item";
+    row.innerHTML = `
+      <span>${item.name} × ${item.qty}</span>
+      <span>₹${itemTotal}</span>
     `;
-    orderItemsDiv.appendChild(div);
+    orderItemsDiv.appendChild(row);
   });
 }
 
 orderTotalSpan.innerText = total;
 
 /* ===============================
-   CONFIRM ORDER
+   CONFIRM ORDER → GOOGLE SHEET
    =============================== */
+async function confirmOrder() {
+  const name = document.getElementById("custName").value.trim();
+  const mobile = document.getElementById("custMobile").value.trim();
 
-function confirmOrder() {
-  if (!cart.length) {
-    alert("Cart empty");
+  if (!name || !mobile) {
+    alert("Name & Mobile required");
     return;
   }
 
-  const order = {
+  const payload = {
+    action: "createOrder",
     slug,
-    items: cart,
-    total,
+    customer_name: name,
+    customer_mobile: mobile,
+    table_no: document.getElementById("tableNo").value || "",
     order_type: document.getElementById("orderType").value,
-    customer_name: document.getElementById("custName").value || "",
-    customer_mobile: document.getElementById("custMobile").value || "",
-    time: new Date().toLocaleString()
+    total,
+    items: cart
   };
 
-  console.log("ORDER:", order);
+  try {
+    const res = await fetch(
+      "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec",
+      {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(payload)
+      }
+    );
 
-  alert("Order placed successfully!");
-  localStorage.removeItem("cart");
-  location.href = "menu.html?slug=" + slug;
+    const data = await res.json();
+
+    if (!data.success) throw "Order failed";
+
+    localStorage.removeItem("cart");
+    alert("Order placed successfully!");
+    location.href = "menu.html?slug=" + slug;
+
+  } catch (e) {
+    alert("Order failed. Try again.");
+  }
 }
