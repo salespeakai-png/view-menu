@@ -6,103 +6,108 @@
 <title>Barf Malai</title>
 
 <style>
+/* ================= RESET ================= */
 *{
   margin:0;
   padding:0;
   box-sizing:border-box;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 
-/* ================= BACKGROUND ================= */
-
+/* ================= BODY ================= */
 body{
   min-height:100vh;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:
-    radial-gradient(circle at top, #5a0f16 0%, #2a070a 60%);
+  background:radial-gradient(circle at top,#5a0f16 0%,#2a070a 60%);
   overflow:hidden;
   position:relative;
 }
 
-/* ❄️ SUBTLE ICE GRAIN */
+/* Ice grain */
 body::after{
   content:"";
   position:absolute;
   inset:0;
-  background-image:
-    repeating-radial-gradient(circle at 20% 30%,
+  background:
+    repeating-radial-gradient(circle at 25% 30%,
       rgba(255,255,255,.05) 0 1px,
       transparent 2px 6px);
   opacity:.25;
   pointer-events:none;
 }
 
-/* 🌫️ LUXURY VIGNETTE */
+/* Vignette */
 body::before{
   content:"";
   position:absolute;
   inset:0;
-  background:radial-gradient(circle, transparent 40%, rgba(0,0,0,.55));
+  background:radial-gradient(circle,transparent 45%,rgba(0,0,0,.6));
   pointer-events:none;
 }
 
-/* ===== CENTER WRAP ===== */
+/* ================= WRAP ================= */
 .wrap{
   position:relative;
   z-index:2;
-  text-align:center;
   display:flex;
   flex-direction:column;
   align-items:center;
-  justify-content:center;
+  text-align:center;
+  opacity:0;
+  animation:splashIn 1.2s ease forwards;
 }
 
-/* ===== LOGO BOX (CONTROL AREA) ===== */
+/* ================= LOGO AREA ================= */
 .logo-box{
-  width:160px;          /* FINAL CONTROL */
-  height:160px;
+  position:relative;
+  width:min(42vw,180px);
+  aspect-ratio:1/1;
   display:flex;
   align-items:center;
   justify-content:center;
-  margin-bottom:16px;
+  margin-bottom:18px;
 }
 
-/* ===== LOGO IMAGE ===== */
+/* Ice glow ring */
+.logo-box::before{
+  content:"";
+  position:absolute;
+  inset:-14px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle,
+      rgba(255,255,255,.35),
+      rgba(212,175,55,.35),
+      transparent 70%);
+  filter:blur(14px);
+  opacity:.85;
+  animation:icePulse 3.5s ease-in-out infinite;
+}
+
+/* Logo image */
 .logo-box img{
   max-width:100%;
   max-height:100%;
-  object-fit:contain;   /* 🔥 MOST IMPORTANT */
-  display:block;
-}
-
-/* Tablet */
-@media (min-width:600px){
-  .logo-box{
-    width:200px;
-    height:200px;
-  }
-}
-
-/* Desktop */
-@media (min-width:1024px){
-  .logo-box{
-    width:220px;
-    height:220px;
-  }
+  object-fit:contain;
+  filter:drop-shadow(0 12px 28px rgba(0,0,0,.6));
+  transform:scale(.82);
+  opacity:0;
+  animation:logoReveal 1.4s cubic-bezier(.22,1,.36,1) forwards;
+  animation-delay:.3s;
 }
 
 /* ================= TEXT ================= */
-
 h1{
-  font-size:30px;
+  font-size:clamp(22px,5vw,30px);
   letter-spacing:2px;
   font-weight:700;
   color:#f5d27a;
+  margin-top:6px;
   opacity:0;
-  animation:textReveal .9s ease forwards;
-  animation-delay:.4s;
+  animation:textReveal .8s ease forwards;
+  animation-delay:.9s;
 }
 
 .divider{
@@ -127,46 +132,53 @@ p{
   letter-spacing:1px;
   color:rgba(255,255,255,.8);
   opacity:0;
-  animation:textReveal .9s ease forwards;
-  animation-delay:.7s;
+  animation:textReveal .8s ease forwards;
+  animation-delay:1.15s;
 }
 
 /* ================= ANIMATIONS ================= */
+@keyframes splashIn{
+  to{opacity:1}
+}
 
-@keyframes cinematicIn{
-  from{
-    opacity:0;
-    transform:translateY(18px) scale(.96);
-  }
+@keyframes logoReveal{
   to{
     opacity:1;
-    transform:none;
+    transform:scale(1);
   }
+}
+
+@keyframes icePulse{
+  0%,100%{opacity:.7}
+  50%{opacity:1}
 }
 
 @keyframes textReveal{
-  to{ opacity:1 }
-}
-
-@keyframes logoFloat{
-  0%,100%{ transform:translateY(0) }
-  50%{ transform:translateY(-6px) }
+  to{opacity:1}
 }
 
 @keyframes goldShimmer{
-  to{ background-position:200% }
+  to{background-position:200%}
+}
+
+/* ================= FADE OUT ================= */
+.fade-out{
+  animation:fadeOut .6s ease forwards;
+}
+
+@keyframes fadeOut{
+  to{opacity:0}
 }
 </style>
 </head>
 
 <body>
 
-<div class="wrap">
+<div class="wrap" id="splash">
   <div class="logo-box">
     <img
       src="https://raw.githubusercontent.com/salespeakai-png/view-menu/main/assets/logo1.png"
-      alt="Barf Malai Logo"
-    >
+      alt="Barf Malai Logo">
   </div>
 
   <h1>BARF MALAI</h1>
@@ -175,12 +187,16 @@ p{
 </div>
 
 <script>
-  /* ⏳ SPLASH → MENU */
+/* ⏳ SPLASH → MENU (SMOOTH FADE) */
+setTimeout(() => {
+  document.getElementById("splash").classList.add("fade-out");
+
   setTimeout(() => {
     window.location.href = "menu.html?slug=barfmalai";
-  }, 3000);
+  }, 600);
+
+}, 2800);
 </script>
 
 </body>
 </html>
-
