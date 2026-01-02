@@ -166,16 +166,25 @@ body{
 
 /* ===== IMAGE LAZY LOAD ===== */
 
-.product img{
-  filter:blur(10px);
-  opacity:.6;
-  transition:filter .4s ease, opacity .4s ease;
+/* PRODUCT IMAGE */
+.product img {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+
+  /* BLUR DEFAULT */
+  filter: blur(10px);
+  transform: scale(1.05);
+  transition: filter 0.4s ease, transform 0.4s ease;
 }
 
-.product img.loaded{
-  filter:blur(0);
-  opacity:1;
+/* REMOVE BLUR AFTER LOAD */
+.product img.loaded {
+  filter: blur(0);
+  transform: scale(1);
 }
+
 
 /* ===== PREMIUM PRODUCT CARD (FINAL) ===== */
 
@@ -321,3 +330,4 @@ footer{
   font-size:13px;
   opacity:.65;
 }
+
