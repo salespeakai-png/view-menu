@@ -87,6 +87,7 @@ fetch(API_URL)
   })
   .catch(() => {
     document.body.innerHTML = "Unable to load menu. Please try again.";
+     document.getElementById("offlineMsg")?.style.display = "block";
   });
 
 /* =====================================
@@ -210,3 +211,4 @@ function renderProducts(categoryId, products) {
     document.getElementById("loadingText")?.remove();
   }, 120);
 }
+
