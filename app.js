@@ -1,6 +1,6 @@
 /* ===============================
-   BARF MALAI – FINAL STABLE APP.JS
-   PHASE 1 + PHASE 2 READY
+   BARF MALAI – FINAL FIXED APP.JS
+   PHASE 1 + PHASE 2 STABLE
    =============================== */
 
 /* 🔹 GET SLUG */
@@ -20,9 +20,7 @@ const productsDiv = document.getElementById("products");
 const skeletonsDiv = document.getElementById("skeletons");
 const loadingText = document.getElementById("loadingText");
 
-/* ===============================
-   CART STATE (PHASE-2)
-   =============================== */
+/* 🔹 CART */
 let CART_ENABLED = false;
 let cart = [];
 
@@ -65,7 +63,7 @@ async function loadMenu() {
     const data = await res.json();
 
     if (data.error === "MENU_OFF") {
-      window.location.href = "menu-off.html?slug=" + slug;
+      location.href = "menu-off.html?slug=" + slug;
       return;
     }
 
@@ -73,13 +71,12 @@ async function loadMenu() {
 
     initMenu(data);
   } catch (err) {
+    console.error("Menu error:", err);
     document.body.innerHTML = `
-      <div style="text-align:center;color:#f5d27a;margin-top:40px">
-        Unable to load menu.<br>
-        Please check internet connection.
+      <div style="color:#fff;text-align:center;margin-top:40px">
+        Unable to load menu
       </div>
     `;
-    console.error(err);
   }
 }
 
@@ -96,7 +93,6 @@ function initMenu(data) {
   menuLogo.onerror = () => (menuLogo.src = "assets/placeholder.png");
   menuName.innerText = r.name;
 
-  /* 🔐 PLAN CHECK */
   CART_ENABLED = r.plan === "phase2" || r.plan === "phase3";
 
   renderCategories(data.categories, data.products);
@@ -109,13 +105,20 @@ function initMenu(data) {
 function renderCategories(categories, products) {
   categoriesDiv.innerHTML = "";
 
+  if (!categories || !categories.length) {
+    categoriesDiv.innerHTML = "<p>No categories</p>";
+    return;
+  }
+
   categories.forEach((cat, index) => {
     const el = document.createElement("div");
     el.className = "category" + (index === 0 ? " active" : "");
     el.innerText = cat.name;
 
     el.onclick = () => {
-      document.querySelectorAll(".category").forEach(c => c.classList.remove("active"));
+      document.querySelectorAll(".category").forEach(c =>
+        c.classList.remove("active")
+      );
       el.classList.add("active");
       renderProducts(cat.id, products);
     };
@@ -127,13 +130,21 @@ function renderCategories(categories, products) {
 }
 
 /* ===============================
-   PRODUCTS
+   PRODUCTS (🔥 FIXED HERE)
    =============================== */
 function renderProducts(categoryId, products) {
   productsDiv.innerHTML = "";
   productsDiv.style.opacity = 0;
 
-  const list = products.filter(p => String(p.categoryId) === String(categoryId));
+  const list = products.filter(
+    p => String(p.category_id) === String(categoryId)
+  );
+
+  if (!list.length) {
+    productsDiv.innerHTML = "<p>No products</p>";
+    productsDiv.style.opacity = 1;
+    return;
+  }
 
   list.forEach(p => {
     const card = document.createElement("div");
@@ -144,7 +155,7 @@ function renderProducts(categoryId, products) {
         onerror="this.src='assets/placeholder.png'">
       <div class="product-info">
         <div class="product-title">
-          <span class="veg-dot ${p.veg === "nonveg" ? "nonveg" : ""}"></span>
+          <img class="veg-icon" src="assets/${p.veg === "nonveg" ? "nonveg" : "veg"}.png">
           <h3>${p.name}</h3>
         </div>
         <p>${p.desc || ""}</p>
@@ -153,10 +164,10 @@ function renderProducts(categoryId, products) {
           ${
             CART_ENABLED
               ? `<div class="qty">
-                   <button onclick="changeQty('${p.id}', -1)">−</button>
-                   <span id="q_${p.id}">0</span>
-                   <button onclick="changeQty('${p.id}', 1)">+</button>
-                 </div>`
+                  <button onclick="changeQty(${p.id}, -1)">−</button>
+                  <span id="q_${p.id}">0</span>
+                  <button onclick="changeQty(${p.id}, 1)">+</button>
+                </div>`
               : ""
           }
         </div>
@@ -171,13 +182,12 @@ function renderProducts(categoryId, products) {
 }
 
 /* ===============================
-   CART LOGIC (PHASE-2)
+   CART
    =============================== */
 function changeQty(id, diff) {
   let item = cart.find(i => i.id === id);
-  if (!item && diff > 0) {
-    cart.push({ id, qty: 1 });
-  } else if (item) {
+  if (!item && diff > 0) cart.push({ id, qty: 1 });
+  else if (item) {
     item.qty += diff;
     if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
   }
@@ -194,7 +204,10 @@ function changeQty(id, diff) {
 function initCartBar() {
   const bar = document.createElement("div");
   bar.id = "cartBar";
-  bar.innerHTML = `<span id="cartText"></span><button onclick="placeOrder()">Place Order</button>`;
+  bar.innerHTML = `
+    <span id="cartText"></span>
+    <button onclick="goCheckout()">Checkout</button>
+  `;
   document.body.appendChild(bar);
 }
 
@@ -202,34 +215,17 @@ function updateCartBar() {
   const bar = document.getElementById("cartBar");
   if (!bar) return;
 
-  const totalQty = cart.reduce((s, i) => s + i.qty, 0);
-  bar.style.display = totalQty ? "flex" : "none";
-  document.getElementById("cartText").innerText = `${totalQty} items in cart`;
+  const total = cart.reduce((s, i) => s + i.qty, 0);
+  bar.style.display = total ? "flex" : "none";
+  document.getElementById("cartText").innerText = `${total} items`;
 }
 
 /* ===============================
-   PLACE ORDER (BACKEND)
+   CHECKOUT
    =============================== */
-function placeOrder() {
+function goCheckout() {
   localStorage.setItem("cart", JSON.stringify(cart));
-  window.location.href = "checkout.html?slug=" + slug;
-}
-
-  const res = await fetch("http://localhost:5000/api/order/create", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-
-  const data = await res.json();
-  if (!res.ok) {
-    alert(data.error || "Order failed");
-    return;
-  }
-
-  alert("Order placed!");
-  cart = [];
-  updateCartBar();
+  location.href = "checkout.html?slug=" + slug;
 }
 
 /* ===============================
