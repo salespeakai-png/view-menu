@@ -181,10 +181,11 @@ function renderProducts(categoryId, products) {
 
     card.innerHTML = `
       <img 
-        src="${p.image}"
-        loading="lazy"
-        onerror="this.src='assets/placeholder.png'"
-      >
+  src="${p.image}"
+  loading="lazy"
+  onload="this.classList.add('loaded')"
+  onerror="this.src='assets/placeholder.png'; this.classList.add('loaded')"
+/>
       <div class="product-info">
         <div class="product-title">
           <span class="veg-dot ${p.veg === "nonveg" ? "nonveg" : ""}"></span>
@@ -208,3 +209,4 @@ function renderProducts(categoryId, products) {
    START
    =============================== */
 fetchMenu();
+
