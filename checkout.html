@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Checkout</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div class="checkout-container">
+    <h2>Order Summary</h2>
+
+    <div id="orderItems"></div>
+
+    <div class="total">
+      Total: ₹<span id="orderTotal">0</span>
+    </div>
+
+    <div class="form">
+      <input id="custName" placeholder="Your name (optional)" />
+      <input id="custMobile" placeholder="Mobile number (optional)" />
+
+      <select id="orderType">
+        <option value="dine-in">Dine In</option>
+        <option value="takeaway">Takeaway</option>
+      </select>
+    </div>
+
+    <button onclick="confirmOrder()">Confirm Order</button>
+  </div>
+
+  <script src="checkout.js"></script>
+</body>
+</html>
