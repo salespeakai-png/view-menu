@@ -1,6 +1,5 @@
 /* ===============================
-   CHECKOUT – FINAL FRONTEND ONLY
-   GitHub Pages + Offline Safe
+   CHECKOUT – FINAL FIXED
    =============================== */
 
 const params = new URLSearchParams(location.search);
@@ -14,8 +13,10 @@ const orderTotalSpan = document.getElementById("orderTotal");
 let total = 0;
 
 /* ===============================
-   RENDER CART ITEMS
+   RENDER ORDER ITEMS
    =============================== */
+
+orderItemsDiv.innerHTML = "";
 
 if (!cart.length) {
   orderItemsDiv.innerHTML =
@@ -28,8 +29,14 @@ if (!cart.length) {
     const div = document.createElement("div");
     div.className = "order-item";
     div.innerHTML = `
-      <span>${item.name} × ${item.qty}</span>
-      <span>₹${itemTotal}</span>
+      <div style="display:flex;justify-content:space-between;width:100%">
+        <span style="font-weight:600">
+          ${item.name} × ${item.qty}
+        </span>
+        <span style="font-weight:700">
+          ₹${itemTotal}
+        </span>
+      </div>
     `;
     orderItemsDiv.appendChild(div);
   });
@@ -38,7 +45,7 @@ if (!cart.length) {
 orderTotalSpan.innerText = total;
 
 /* ===============================
-   CONFIRM ORDER (NO API)
+   CONFIRM ORDER
    =============================== */
 
 function confirmOrder() {
@@ -57,10 +64,9 @@ function confirmOrder() {
     time: new Date().toLocaleString()
   };
 
-  console.log("ORDER DATA:", order);
+  console.log("ORDER:", order);
 
   alert("Order placed successfully!");
-
   localStorage.removeItem("cart");
   location.href = "menu.html?slug=" + slug;
 }
