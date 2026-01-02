@@ -1,5 +1,5 @@
 /* ===============================
-   DIGITAL MENU – FINAL FIXED APP.JS
+   DIGITAL MENU – FINAL STABLE APP.JS
    =============================== */
 
 /* 🔹 SLUG */
@@ -8,7 +8,7 @@ const slug = params.get("slug") || "barfmalai";
 
 /* 🔹 API */
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbwh-eNLy81JK6AvwQQF-H7flEDANpUjHTv7Y2ubdnqGRO4IzhRf6HT1AZSzkqCqiyM8/exec?slug=" +slug;
+  "https://script.google.com/macros/s/AKfycbwh-eNLy81JK6AvwQQF-H7flEDANpUjHTv7Y2ubdnqGRO4IzhRf6HT1AZSzkqCqiyM8/exec?slug=" + slug;
 
 /* 🔹 DOM */
 const menuLogo = document.getElementById("menuLogo");
@@ -32,7 +32,7 @@ const norm = v => String(v ?? "").trim().toLowerCase();
    =============================== */
 function showSkeletons(count = 4) {
   if (!skeletonsDiv) return;
-  skeletonsDiv.style.display = "block";
+  skeletonsDiv.style.display = "flex";
   skeletonsDiv.innerHTML = "";
   for (let i = 0; i < count; i++) {
     skeletonsDiv.innerHTML += `
@@ -58,6 +58,7 @@ function hideSkeletons() {
    =============================== */
 async function loadMenu() {
   showSkeletons();
+
   try {
     const res = await fetch(API_URL);
     const data = await res.json();
@@ -66,32 +67,34 @@ async function loadMenu() {
       location.href = "menu-off.html?slug=" + slug;
       return;
     }
+
     if (data.error) throw data.error;
 
     initMenu(data);
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error(err);
     document.body.innerHTML =
       "<p style='text-align:center;color:#fff;margin-top:40px'>Menu load failed</p>";
   }
 }
 
 /* ===============================
-   INIT
+   INIT MENU
    =============================== */
 function initMenu(data) {
   hideSkeletons();
   loadingText && loadingText.remove();
 
-  const r = data.restaurant;
+  const r = data.restaurant || {};
 
-  menuLogo.src = r.logo_url;
+  /* Header */
+  menuLogo.src = r.logo_url || "assets/placeholder.png";
   menuLogo.onerror = () => (menuLogo.src = "assets/placeholder.png");
-  menuName.innerText = r.name;
+  menuName.innerText = r.name || "Menu";
 
   CART_ENABLED = r.plan === "phase2" || r.plan === "phase3";
 
-  renderCategories(data.categories, data.products);
+  renderCategories(data.categories || [], data.products || []);
   if (CART_ENABLED) initCartBar();
 }
 
@@ -100,7 +103,12 @@ function initMenu(data) {
    =============================== */
 function renderCategories(categories, products) {
   categoriesDiv.innerHTML = "";
-  if (!categories || !categories.length) return;
+
+  if (!categories.length) {
+    productsDiv.innerHTML =
+      "<p style='color:#fff'>No categories</p>";
+    return;
+  }
 
   categories.forEach((cat, i) => {
     const el = document.createElement("div");
@@ -122,7 +130,7 @@ function renderCategories(categories, products) {
 }
 
 /* ===============================
-   PRODUCTS – 🔥 REAL FIX
+   PRODUCTS – 🔥 FINAL SAFE LOGIC
    =============================== */
 function renderProducts(category, products) {
   productsDiv.innerHTML = "";
@@ -136,7 +144,6 @@ function renderProducts(category, products) {
       norm(p.categoryId) ||
       norm(p.category_id) ||
       norm(p.category);
-
     return pid === cid || pid === cname;
   });
 
@@ -152,7 +159,8 @@ function renderProducts(category, products) {
     card.className = "product";
 
     card.innerHTML = `
-      <img src="${p.image}" loading="lazy"
+      <img src="${p.image}"
+           loading="lazy"
            onload="this.classList.add('loaded')"
            onerror="this.src='assets/placeholder.png'">
 
@@ -167,35 +175,48 @@ function renderProducts(category, products) {
 
         <div class="price-row">
           <span class="price">₹${p.price}</span>
+
           ${
             CART_ENABLED
               ? `<div class="qty">
-                   <button onclick="changeQty(${p.id}, -1)">−</button>
-                   <span id="q_${p.id}">0</span>
-                   <button onclick="changeQty(${p.id}, 1)">+</button>
+                   <button class="qty-btn" onclick="changeQty(${p.id}, -1)">−</button>
+                   <span class="qty-count" id="q_${p.id}">0</span>
+                   <button class="qty-btn" onclick="changeQty(${p.id}, 1)">+</button>
                  </div>`
               : ""
           }
         </div>
-      </div>`;
+      </div>
+    `;
+
     productsDiv.appendChild(card);
   });
 
-  requestAnimationFrame(() => (productsDiv.style.opacity = 1));
+  requestAnimationFrame(() => {
+    productsDiv.style.opacity = 1;
+  });
 }
 
 /* ===============================
-   CART
+   CART LOGIC
    =============================== */
 function changeQty(id, diff) {
   let item = cart.find(i => i.id === id);
-  if (!item && diff > 0) cart.push({ id, qty: 1 });
-  else if (item) {
+
+  if (!item && diff > 0) {
+    cart.push({ id, qty: 1 });
+  } else if (item) {
     item.qty += diff;
-    if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+    if (item.qty <= 0) {
+      cart = cart.filter(i => i.id !== id);
+    }
   }
-  document.getElementById("q_" + id).innerText =
-    cart.find(i => i.id === id)?.qty || 0;
+
+  const qtyEl = document.getElementById("q_" + id);
+  if (qtyEl) {
+    qtyEl.innerText = cart.find(i => i.id === id)?.qty || 0;
+  }
+
   updateCartBar();
 }
 
@@ -203,10 +224,12 @@ function changeQty(id, diff) {
    CART BAR
    =============================== */
 function initCartBar() {
+  if (document.getElementById("cartBar")) return;
+
   const bar = document.createElement("div");
   bar.id = "cartBar";
   bar.innerHTML = `
-    <span id="cartText"></span>
+    <span id="cartText">0 items</span>
     <button onclick="goCheckout()">Checkout</button>`;
   document.body.appendChild(bar);
 }
@@ -214,6 +237,7 @@ function initCartBar() {
 function updateCartBar() {
   const bar = document.getElementById("cartBar");
   if (!bar) return;
+
   const total = cart.reduce((s, i) => s + i.qty, 0);
   bar.style.display = total ? "flex" : "none";
   document.getElementById("cartText").innerText = `${total} items`;
