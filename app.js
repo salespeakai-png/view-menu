@@ -73,6 +73,15 @@ showSkeletons(4);
 fetch(API_URL)
   .then(res => res.json())
   .then(data => {
+     if (data.error === "OFFLINE_NO_CACHE") {
+  document.body.innerHTML = `
+    <div style="text-align:center;color:#f5d27a;margin-top:40px">
+      Offline – Menu not loaded yet.<br>
+      Please connect to internet once.
+    </div>
+  `;
+  return;
+}
     if (data.error === "MENU_OFF") {
       window.location.href = "menu-off.html?slug=" + slug;
       return;
@@ -211,4 +220,5 @@ function renderProducts(categoryId, products) {
     document.getElementById("loadingText")?.remove();
   }, 120);
 }
+
 
