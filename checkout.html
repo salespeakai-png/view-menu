@@ -1,35 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Checkout</title>
-<link rel="stylesheet" href="style.css">
+
+<style>
+:root{
+  --bg:#2a070a;
+  --gold:#d4af37;
+  --card:#fff;
+}
+
+body{
+  margin:0;
+  font-family:system-ui;
+  background:linear-gradient(135deg,#4a0d14,#2a070a);
+  color:#222;
+  padding-bottom:90px;
+}
+
+h2{
+  color:#f5d27a;
+  padding:16px;
+}
+
+.order-item{
+  background:#fff;
+  margin:12px 16px;
+  padding:14px;
+  border-radius:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.order-item h4{
+  margin:0;
+  font-size:15px;
+}
+
+.order-item span{
+  font-weight:800;
+  font-size:16px;
+  color:#2a070a;
+}
+
+.total-box{
+  margin:16px;
+  padding:14px;
+  border-radius:14px;
+  background:linear-gradient(135deg,#f3d98b,#d4af37);
+  font-size:18px;
+  font-weight:900;
+  text-align:center;
+}
+
+.form{
+  background:#fff;
+  margin:16px;
+  padding:16px;
+  border-radius:14px;
+}
+
+.form input,.form select{
+  width:100%;
+  padding:12px;
+  margin-bottom:12px;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+
+.checkout-bar{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  background:linear-gradient(135deg,#f3d98b,#d4af37);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 18px;
+}
+
+.checkout-bar button{
+  background:#2a070a;
+  color:#f5d27a;
+  border:none;
+  padding:12px 22px;
+  border-radius:999px;
+  font-weight:800;
+}
+</style>
 </head>
 
 <body>
 
-<div class="header">
-  <h2>Order Summary</h2>
+<h2>Order Summary</h2>
+
+<div id="orderItems"></div>
+
+<div class="total-box">
+  Total: ₹<span id="orderTotal">0</span>
 </div>
 
-<div class="checkout-container">
-  <div id="orderItems"></div>
+<div class="form">
+  <input id="custName" placeholder="Customer Name *">
+  <input id="custMobile" placeholder="Mobile Number *">
+  <input id="tableNo" placeholder="Table No (optional)">
 
-  <div class="total-box">
-    Total: ₹<span id="orderTotal">0</span>
-  </div>
-
-  <div class="form">
-    <input id="custName" placeholder="Customer Name *" required>
-    <input id="custMobile" placeholder="Mobile Number *" required>
-    <input id="tableNo" placeholder="Table No (optional)">
-
-    <select id="orderType">
-      <option value="dine-in">Dine In</option>
-      <option value="takeaway">Takeaway</option>
-    </select>
-  </div>
+  <select id="orderType">
+    <option value="dine-in">Dine In</option>
+    <option value="takeaway">Takeaway</option>
+  </select>
 </div>
 
 <div class="checkout-bar">
@@ -37,6 +120,66 @@
   <button onclick="confirmOrder()">Confirm</button>
 </div>
 
-<script src="checkout.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const slug = params.get("slug") || "barfmalai";
+
+const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+const itemsDiv = document.getElementById("orderItems");
+const totalSpan = document.getElementById("orderTotal");
+
+let total = 0;
+itemsDiv.innerHTML = "";
+
+if (!cart.length) {
+  itemsDiv.innerHTML = "<p style='opacity:.6;margin:16px'>Cart empty</p>";
+} else {
+  cart.forEach(item => {
+    const t = item.price * item.qty;
+    total += t;
+
+    const row = document.createElement("div");
+    row.className = "order-item";
+    row.innerHTML = `
+      <div>
+        <h4>${item.name}</h4>
+        <small>Qty: ${item.qty}</small>
+      </div>
+      <span>₹${t}</span>
+    `;
+    itemsDiv.appendChild(row);
+  });
+}
+
+totalSpan.innerText = total;
+
+function confirmOrder(){
+  const name = custName.value.trim();
+  const mobile = custMobile.value.trim();
+
+  if(!name || !mobile){
+    alert("Name & Mobile required");
+    return;
+  }
+
+  const payload = {
+    slug,
+    customer_name:name,
+    customer_mobile:mobile,
+    table_no:tableNo.value,
+    order_type:orderType.value,
+    total,
+    items:cart,
+    time:new Date().toLocaleString()
+  };
+
+  console.log("ORDER:",payload);
+
+  alert("Order placed successfully!");
+  localStorage.removeItem("cart");
+  location.href="menu.html?slug="+slug;
+}
+</script>
+
 </body>
 </html>
