@@ -5,68 +5,110 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Checkout</title>
 
-<link rel="stylesheet" href="style.css">
-
 <style>
+:root{
+  --bg:#2a070a;
+  --gold:#d4af37;
+  --card:#ffffff;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+
 body{
   background:linear-gradient(135deg,#4a0d14,#2a070a);
+  min-height:100vh;
   padding-bottom:90px;
 }
+
+/* HEADER */
+.header{
+  padding:16px;
+  color:#f5d27a;
+  font-size:20px;
+  font-weight:700;
+}
+
+/* ITEMS */
 .checkout-container{padding:16px}
+
 .order-item{
   background:#fff;
-  border-radius:14px;
-  padding:12px;
+  border-radius:16px;
+  padding:14px;
   margin-bottom:12px;
+  box-shadow:0 8px 22px rgba(0,0,0,.35);
   display:flex;
   justify-content:space-between;
   font-weight:600;
+  color:#2a070a;
 }
+
+/* TOTAL */
 .total-box{
   background:linear-gradient(135deg,#f3d98b,#d4af37);
   border-radius:14px;
   padding:14px;
+  font-size:18px;
   font-weight:900;
   text-align:center;
+  color:#2a070a;
   margin:18px 0;
 }
+
+/* FORM */
 .form{
   background:#fff;
-  border-radius:14px;
-  padding:14px;
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 8px 22px rgba(0,0,0,.35);
 }
+
 .form input,.form select{
   width:100%;
   padding:12px;
   margin-bottom:12px;
-  border-radius:10px;
+  border-radius:12px;
   border:1px solid #ddd;
+  font-size:14px;
 }
+
+/* FIXED BAR */
 .checkout-bar{
   position:fixed;
-  bottom:0;left:0;width:100%;
+  bottom:0;
+  left:0;
+  width:100%;
   background:linear-gradient(135deg,#f3d98b,#d4af37);
   display:flex;
   justify-content:space-between;
   align-items:center;
   padding:14px 18px;
+  box-shadow:0 -6px 22px rgba(0,0,0,.35);
 }
+
+.checkout-bar span{
+  font-size:16px;
+  font-weight:900;
+  color:#2a070a;
+}
+
 .checkout-bar button{
+  padding:12px 26px;
+  border:none;
+  border-radius:999px;
   background:#2a070a;
   color:#f5d27a;
-  border:none;
-  padding:12px 22px;
-  border-radius:999px;
   font-weight:800;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<div class="checkout-container">
-  <h2 style="color:#f5d27a">Order Summary</h2>
+<div class="header">Order Summary</div>
 
+<div class="checkout-container">
   <div id="orderItems"></div>
 
   <div class="total-box">
@@ -74,9 +116,9 @@ body{
   </div>
 
   <div class="form">
-    <input id="custName" placeholder="Customer Name" required />
-    <input id="custMobile" placeholder="Mobile Number" required />
-    <input id="tableNo" placeholder="Table No (optional)" />
+    <input id="custName" placeholder="Customer Name *" required>
+    <input id="custMobile" placeholder="Mobile Number *" required>
+    <input id="tableNo" placeholder="Table No (optional)">
 
     <select id="orderType">
       <option value="dine-in">Dine In</option>
