@@ -97,18 +97,22 @@ body{
   box-shadow:0 10px 26px rgba(0,0,0,.35);
 }
 
-/* PRODUCT IMAGE + BLUR FIX */
+/* ===== IMAGE LOADING FIX ===== */
 .product img{
-  width:70px;
-  height:70px;
-  border-radius:14px;
+  width:88px;
+  height:88px;
+  border-radius:16px;
   object-fit:cover;
-  filter:blur(10px);
-  transition:filter .4s ease;
+  box-shadow:0 6px 14px rgba(0,0,0,.25);
+
+  filter: blur(8px);
+  transform: scale(1.05);
+  transition: filter .35s ease, transform .35s ease;
 }
 
 .product img.loaded{
-  filter:blur(0);
+  filter: blur(0);
+  transform: scale(1);
 }
 
 /* INFO */
@@ -158,30 +162,42 @@ body{
   color:#2a070a;
 }
 
-/* QTY */
+/* ===== QTY CONTROLS (PREMIUM) ===== */
 .qty{
   display:flex;
   align-items:center;
   gap:8px;
-  margin-left:auto;
 }
 
 .qty-btn{
-  width:30px;
-  height:30px;
-  border-radius:50%;
+  width:32px;
+  height:32px;
+  border-radius:10px;
   border:none;
-  font-size:18px;
-  font-weight:800;
+  cursor:pointer;
+
   background:linear-gradient(135deg,#f3d98b,#d4af37);
   color:#2a070a;
-  cursor:pointer;
+  font-size:18px;
+  font-weight:900;
+
+  box-shadow:0 4px 10px rgba(0,0,0,.25);
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+
+.qty-btn:active{
+  transform:scale(.92);
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
 }
 
 .qty-count{
-  font-weight:700;
+  min-width:22px;
+  text-align:center;
+  font-size:14px;
+  font-weight:800;
   color:#2a070a;
 }
+
 
 /* ================= SKELETON ================= */
 
@@ -262,5 +278,6 @@ footer{
   font-size:13px;
   opacity:.65;
 }
+
 
 
