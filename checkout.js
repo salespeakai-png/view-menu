@@ -2,35 +2,52 @@
    CHECKOUT – FINAL PRODUCTION
    =============================== */
 
-const params = new URLSearchParams(location.search);
+/* ---------- PARAMS ---------- */
+const params = new URLSearchParams(window.location.search);
 const slug = params.get("slug") || "barfmalai";
 
-const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-
+/* ---------- DOM ---------- */
 const orderItemsDiv = document.getElementById("orderItems");
 const orderTotalSpan = document.getElementById("orderTotal");
 
-let total = 0;
+const custNameInput   = document.getElementById("custName");
+const custMobileInput = document.getElementById("custMobile");
+const tableNoInput    = document.getElementById("tableNo");
+const orderTypeSelect = document.getElementById("orderType");
+
+/* ---------- CART ---------- */
+let cart = [];
+try {
+  cart = JSON.parse(localStorage.getItem("cart")) || [];
+} catch (e) {
+  cart = [];
+}
 
 /* ===============================
    RENDER ORDER ITEMS
    =============================== */
+let total = 0;
 orderItemsDiv.innerHTML = "";
 
-if (!cart.length) {
+if (!Array.isArray(cart) || cart.length === 0) {
   orderItemsDiv.innerHTML =
-    "<p style='opacity:.7'>No items in cart</p>";
+    "<p style='opacity:.6;margin:16px'>Your cart is empty</p>";
 } else {
   cart.forEach(item => {
-    const itemTotal = item.price * item.qty;
+    // 🔒 HARD SAFETY
+    const name  = item.name || "Item";
+    const qty   = Number(item.qty) || 0;
+    const price = Number(item.price) || 0;
+
+    const itemTotal = qty * price;
     total += itemTotal;
 
     const row = document.createElement("div");
     row.className = "order-item";
     row.innerHTML = `
       <div>
-        <h4>${item.name}</h4>
-        <small>Qty: ${item.qty}</small>
+        <h4>${name}</h4>
+        <small>Qty: ${qty}</small>
       </div>
       <span>₹${itemTotal}</span>
     `;
@@ -43,32 +60,54 @@ orderTotalSpan.innerText = total;
 /* ===============================
    CONFIRM ORDER
    =============================== */
-async function confirmOrder() {
-  const name = document.getElementById("custName").value.trim();
-  const mobile = document.getElementById("custMobile").value.trim();
+window.confirmOrder = async function () {
 
-  if (!name || !mobile) {
-    alert("Name & mobile required");
+  const customer_name   = custNameInput.value.trim();
+  const customer_mobile = custMobileInput.value.trim();
+  const table_no        = tableNoInput.value.trim();
+  const order_type      = orderTypeSelect.value;
+
+  if (!customer_name || !customer_mobile) {
+    alert("Customer name and mobile number are required");
     return;
   }
 
+  if (!cart.length) {
+    alert("Cart is empty");
+    return;
+  }
+
+  /* ---------- FINAL PAYLOAD ---------- */
   const payload = {
     slug,
-    customer_name: name,
-    customer_mobile: mobile,
-    table_no: document.getElementById("tableNo").value || "",
-    order_type: document.getElementById("orderType").value,
+    customer_name,
+    customer_mobile,
+    table_no,
+    order_type,
     total,
-    items: cart,
-    time: new Date().toISOString()
+    items: cart.map(i => ({
+      id: i.id,
+      name: i.name,
+      price: Number(i.price),
+      qty: Number(i.qty),
+      amount: Number(i.price) * Number(i.qty)
+    })),
+    time: new Date().toLocaleString()
   };
 
-  console.log("ORDER PAYLOAD:", payload);
+  console.log("FINAL ORDER PAYLOAD:", payload);
 
-  // 🔥 Phase-3: yahin se Google Apps Script POST karega
-  // fetch(APP_SCRIPT_ORDER_URL,{method:"POST",body:JSON.stringify(payload)})
+  /*
+  🔗 FUTURE (when order API ready)
+  await fetch(ORDER_API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  */
 
   alert("Order placed successfully!");
+
   localStorage.removeItem("cart");
   location.href = "menu.html?slug=" + slug;
-}
+};
