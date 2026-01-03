@@ -1,12 +1,11 @@
 /* ===============================
-   CHECKOUT – FINAL PRODUCTION
+   CHECKOUT – FINAL PRODUCTION SAFE
    =============================== */
 
-/* ---------- PARAMS ---------- */
 const params = new URLSearchParams(window.location.search);
 const slug = params.get("slug") || "barfmalai";
 
-/* ---------- DOM ---------- */
+/* DOM */
 const orderItemsDiv = document.getElementById("orderItems");
 const orderTotalSpan = document.getElementById("orderTotal");
 
@@ -15,27 +14,27 @@ const custMobileInput = document.getElementById("custMobile");
 const tableNoInput    = document.getElementById("tableNo");
 const orderTypeSelect = document.getElementById("orderType");
 
-/* ---------- CART ---------- */
+/* CART */
 let cart = [];
 try {
   cart = JSON.parse(localStorage.getItem("cart")) || [];
-} catch (e) {
+} catch {
   cart = [];
 }
 
 /* ===============================
-   RENDER ORDER ITEMS
+   RENDER ORDER
    =============================== */
+
 let total = 0;
 orderItemsDiv.innerHTML = "";
 
-if (!Array.isArray(cart) || cart.length === 0) {
+if (!cart.length) {
   orderItemsDiv.innerHTML =
     "<p style='opacity:.6;margin:16px'>Your cart is empty</p>";
 } else {
   cart.forEach(item => {
-    // 🔒 HARD SAFETY
-    const name  = item.name || "Item";
+    const name  = String(item.name || "Item");
     const qty   = Number(item.qty) || 0;
     const price = Number(item.price) || 0;
 
@@ -60,6 +59,7 @@ orderTotalSpan.innerText = total;
 /* ===============================
    CONFIRM ORDER
    =============================== */
+
 window.confirmOrder = async function () {
 
   const customer_name   = custNameInput.value.trim();
@@ -67,8 +67,13 @@ window.confirmOrder = async function () {
   const table_no        = tableNoInput.value.trim();
   const order_type      = orderTypeSelect.value;
 
-  if (!customer_name || !customer_mobile) {
-    alert("Customer name and mobile number are required");
+  if (!customer_name) {
+    alert("Customer name required");
+    return;
+  }
+
+  if (!/^[6-9]\d{9}$/.test(customer_mobile)) {
+    alert("Enter valid 10 digit mobile number");
     return;
   }
 
@@ -77,7 +82,6 @@ window.confirmOrder = async function () {
     return;
   }
 
-  /* ---------- FINAL PAYLOAD ---------- */
   const payload = {
     slug,
     customer_name,
@@ -88,26 +92,16 @@ window.confirmOrder = async function () {
     items: cart.map(i => ({
       id: i.id,
       name: i.name,
-      price: Number(i.price),
-      qty: Number(i.qty),
-      amount: Number(i.price) * Number(i.qty)
+      qty: i.qty,
+      price: i.price,
+      amount: i.qty * i.price
     })),
-    time: new Date().toLocaleString()
+    time: new Date().toISOString()
   };
 
-  console.log("FINAL ORDER PAYLOAD:", payload);
-
-  /*
-  🔗 FUTURE (when order API ready)
-  await fetch(ORDER_API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-  */
+  console.log("ORDER PAYLOAD:", payload);
 
   alert("Order placed successfully!");
-
   localStorage.removeItem("cart");
   location.href = "menu.html?slug=" + slug;
 };
