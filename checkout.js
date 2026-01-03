@@ -52,7 +52,7 @@ async function confirmOrder() {
   };
 
   await fetch(
-    "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec",
+    "https://script.google.com/macros/s/AKfycbwh-eNLy81JK6AvwQQF-H7flEDANpUjHTv7Y2ubdnqGRO4IzhRf6HT1AZSzkqCqiyM8/exec",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
