@@ -1,37 +1,41 @@
 /* ===============================
-   DIGITAL MENU – FINAL STABLE FIX
+   DIGITAL MENU – FINAL MOBILE SAFE
    =============================== */
 
+/* ---------- SLUG ---------- */
 const params = new URLSearchParams(window.location.search);
 const slug = params.get("slug") || "barfmalai";
 
+/* ---------- API ---------- */
 const API_URL =
   "https://script.google.com/macros/s/AKfycbwh-eNLy81JK6AvwQQF-H7flEDANpUjHTv7Y2ubdnqGRO4IzhRf6HT1AZSzkqCqiyM8/exec?slug=" +
   encodeURIComponent(slug);
 
-/* DOM */
-const menuLogo = document.getElementById("menuLogo");
-const menuName = document.getElementById("menuName");
-const categoriesDiv = document.getElementById("categories");
-const productsDiv = document.getElementById("products");
-const skeletonsDiv = document.getElementById("skeletons");
-const loadingText = document.getElementById("loadingText");
+/* ---------- DOM (SAFE) ---------- */
+const $ = id => document.getElementById(id);
 
-/* CART */
+const menuBox = $("menu");
+const menuLogo = $("menuLogo");
+const menuName = $("menuName");
+const categoriesDiv = $("categories");
+const productsDiv = $("products");
+const skeletonsDiv = $("skeletons");
+const loadingText = $("loadingText");
+
+/* ---------- CART ---------- */
 let CART_ENABLED = false;
 let cart = [];
 
-/* UTILS */
+/* ---------- UTILS ---------- */
 const norm = v => String(v ?? "").trim().toLowerCase();
 
 /* ===============================
-   SKELETON (GUARDED)
+   SKELETON
    =============================== */
-let skeletonTimer;
-
 function showSkeletons(count = 4) {
+  if (!skeletonsDiv) return;
   skeletonsDiv.innerHTML = "";
-  skeletonsDiv.style.display = "flex";
+  skeletonsDiv.style.display = "block";
 
   for (let i = 0; i < count; i++) {
     skeletonsDiv.innerHTML += `
@@ -47,37 +51,36 @@ function showSkeletons(count = 4) {
 }
 
 function hideSkeletons() {
+  if (!skeletonsDiv) return;
   skeletonsDiv.style.display = "none";
   skeletonsDiv.innerHTML = "";
 }
 
 /* ===============================
-   LOAD MENU (STABLE)
+   LOAD MENU (MOBILE SAFE)
    =============================== */
 async function loadMenu() {
+  if (loadingText) loadingText.style.display = "block";
   showSkeletons();
-
-  // Minimum skeleton time (IMPORTANT)
-  skeletonTimer = new Promise(res => setTimeout(res, 1200));
 
   try {
     const res = await fetch(API_URL, { cache: "no-store" });
     const data = await res.json();
 
-    await skeletonTimer;
-
     if (data?.error === "MENU_OFF") {
       location.href = "menu-off.html?slug=" + slug;
       return;
     }
-    if (data?.error) throw data.error;
+
+    if (!data || data.error) {
+      throw new Error("Invalid API response");
+    }
 
     initMenu(data);
-
   } catch (err) {
-    console.error("MENU ERROR:", err);
-    loadingText.innerText = "Failed to load menu";
+    console.error("MENU LOAD ERROR:", err);
     hideSkeletons();
+    if (loadingText) loadingText.innerText = "Failed to load menu";
   }
 }
 
@@ -86,13 +89,19 @@ async function loadMenu() {
    =============================== */
 function initMenu(data) {
   hideSkeletons();
-  loadingText?.remove();
+  if (loadingText) loadingText.remove();
+  if (menuBox) menuBox.style.display = "block";
 
   const r = data.restaurant || {};
 
-  menuLogo.src = r.logo_url || "assets/logo1.png";
-  menuLogo.onerror = () => (menuLogo.src = "assets/logo1.png");
-  menuName.innerText = r.name || "Menu";
+  if (menuLogo) {
+    menuLogo.src = r.logo_url || "assets/logo1.png";
+    menuLogo.onerror = () => (menuLogo.src = "assets/logo1.png");
+  }
+
+  if (menuName) {
+    menuName.innerText = r.name || "Menu";
+  }
 
   CART_ENABLED = ["phase2", "phase3"].includes(norm(r.plan));
 
@@ -104,6 +113,8 @@ function initMenu(data) {
    CATEGORIES
    =============================== */
 function renderCategories(categories, products) {
+  if (!categoriesDiv) return;
+
   categoriesDiv.innerHTML = "";
 
   if (!categories.length) {
@@ -117,7 +128,8 @@ function renderCategories(categories, products) {
     el.innerText = cat.name;
 
     el.onclick = () => {
-      document.querySelectorAll(".category")
+      document
+        .querySelectorAll(".category")
         .forEach(c => c.classList.remove("active"));
       el.classList.add("active");
       renderProducts(cat, products);
@@ -130,9 +142,11 @@ function renderCategories(categories, products) {
 }
 
 /* ===============================
-   PRODUCTS (FIXED MATCHING)
+   PRODUCTS (SAFE MATCH)
    =============================== */
 function renderProducts(category, products) {
+  if (!productsDiv) return;
+
   productsDiv.innerHTML = "";
 
   const cid = norm(category.id);
@@ -156,22 +170,30 @@ function renderProducts(category, products) {
     card.className = "product";
 
     card.innerHTML = `
-      <img src="${p.image}" onload="this.classList.add('loaded')" />
+      <img src="${p.image}"
+           loading="lazy"
+           onload="this.classList.add('loaded')"
+           onerror="this.src='assets/placeholder.png'">
+
       <div class="product-info">
         <div class="product-title">
-          <img class="veg-icon" src="assets/${norm(p.veg)==="nonveg"?"nonveg":"veg"}.png">
+          <img class="veg-icon"
+               src="assets/${norm(p.veg) === "nonveg" ? "nonveg" : "veg"}.png">
           <h3>${p.name}</h3>
         </div>
+
         <p>${p.desc || ""}</p>
+
         <div class="price-row">
           <span class="price">₹${p.price}</span>
           ${
-            CART_ENABLED ? `
-            <div class="qty">
-              <button class="qty-btn" onclick="changeQty(${p.id},-1)">−</button>
-              <span class="qty-count" id="q_${p.id}">0</span>
-              <button class="qty-btn" onclick="changeQty(${p.id},1)">+</button>
-            </div>` : ""
+            CART_ENABLED
+              ? `<div class="qty">
+                   <button class="qty-btn" onclick="changeQty(${p.id},-1)">−</button>
+                   <span class="qty-count" id="q_${p.id}">0</span>
+                   <button class="qty-btn" onclick="changeQty(${p.id},1)">+</button>
+                 </div>`
+              : ""
           }
         </div>
       </div>`;
@@ -182,7 +204,7 @@ function renderProducts(category, products) {
 /* ===============================
    CART
    =============================== */
-window.changeQty = function(id, diff) {
+window.changeQty = function (id, diff) {
   let item = cart.find(i => i.id === id);
 
   if (!item && diff > 0) {
@@ -192,14 +214,18 @@ window.changeQty = function(id, diff) {
     if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
   }
 
-  document.getElementById("q_" + id).innerText =
-    cart.find(i => i.id === id)?.qty || 0;
+  const q = document.getElementById("q_" + id);
+  if (q) q.innerText = cart.find(i => i.id === id)?.qty || 0;
 
   updateCartBar();
 };
 
+/* ===============================
+   CART BAR
+   =============================== */
 function initCartBar() {
   if (document.getElementById("cartBar")) return;
+
   const bar = document.createElement("div");
   bar.id = "cartBar";
   bar.innerHTML = `
@@ -210,17 +236,19 @@ function initCartBar() {
 
 function updateCartBar() {
   const bar = document.getElementById("cartBar");
-  const total = cart.reduce((s,i)=>s+i.qty,0);
+  if (!bar) return;
+
+  const total = cart.reduce((s, i) => s + i.qty, 0);
   bar.style.display = total ? "flex" : "none";
   document.getElementById("cartText").innerText = total + " items";
 }
 
-window.goCheckout = function() {
+window.goCheckout = function () {
   localStorage.setItem("cart", JSON.stringify(cart));
   location.href = "checkout.html?slug=" + slug;
 };
 
 /* ===============================
-   START
+   START (NO DOMCONTENTLOADED)
    =============================== */
-document.addEventListener("DOMContentLoaded", loadMenu);
+loadMenu();
