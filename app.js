@@ -1,5 +1,5 @@
 /* ===============================
-   DIGITAL MENU – FINAL MOBILE SAFE
+   DIGITAL MENU – PRODUCTION READY
    =============================== */
 
 /* ---------- SLUG ---------- */
@@ -11,20 +11,21 @@ const API_URL =
   "https://script.google.com/macros/s/AKfycbwh-eNLy81JK6AvwQQF-H7flEDANpUjHTv7Y2ubdnqGRO4IzhRf6HT1AZSzkqCqiyM8/exec?slug=" +
   encodeURIComponent(slug);
 
-/* ---------- DOM (SAFE) ---------- */
+/* ---------- DOM SAFE ---------- */
 const $ = id => document.getElementById(id);
 
-const menuBox = $("menu");
-const menuLogo = $("menuLogo");
-const menuName = $("menuName");
-const categoriesDiv = $("categories");
-const productsDiv = $("products");
-const skeletonsDiv = $("skeletons");
-const loadingText = $("loadingText");
+const menuBox      = $("menu");
+const menuLogo     = $("menuLogo");
+const menuName     = $("menuName");
+const categoriesEl = $("categories");
+const productsEl   = $("products");
+const skeletonsEl  = $("skeletons");
+const loadingText  = $("loadingText");
 
-/* ---------- CART ---------- */
+/* ---------- STATE ---------- */
 let CART_ENABLED = false;
 let cart = [];
+let PRODUCT_MAP = {}; // 🔥 production fix
 
 /* ---------- UTILS ---------- */
 const norm = v => String(v ?? "").trim().toLowerCase();
@@ -33,12 +34,12 @@ const norm = v => String(v ?? "").trim().toLowerCase();
    SKELETON
    =============================== */
 function showSkeletons(count = 4) {
-  if (!skeletonsDiv) return;
-  skeletonsDiv.innerHTML = "";
-  skeletonsDiv.style.display = "block";
+  if (!skeletonsEl) return;
+  skeletonsEl.innerHTML = "";
+  skeletonsEl.style.display = "block";
 
   for (let i = 0; i < count; i++) {
-    skeletonsDiv.innerHTML += `
+    skeletonsEl.innerHTML += `
       <div class="skeleton-card">
         <div class="skeleton-img"></div>
         <div style="flex:1">
@@ -51,34 +52,34 @@ function showSkeletons(count = 4) {
 }
 
 function hideSkeletons() {
-  if (!skeletonsDiv) return;
-  skeletonsDiv.style.display = "none";
-  skeletonsDiv.innerHTML = "";
+  if (!skeletonsEl) return;
+  skeletonsEl.style.display = "none";
+  skeletonsEl.innerHTML = "";
 }
 
 /* ===============================
-   LOAD MENU (MOBILE SAFE)
+   LOAD MENU
    =============================== */
 async function loadMenu() {
-  if (loadingText) loadingText.style.display = "block";
-  showSkeletons();
-
   try {
+    if (loadingText) loadingText.style.display = "block";
+    showSkeletons();
+
     const res = await fetch(API_URL, { cache: "no-store" });
     const data = await res.json();
 
-    if (data?.error === "MENU_OFF") {
-      location.href = "menu-off.html?slug=" + slug;
-      return;
-    }
-
     if (!data || data.error) {
-      throw new Error("Invalid API response");
+      if (data?.error === "MENU_OFF") {
+        location.href = "menu-off.html?slug=" + slug;
+        return;
+      }
+      throw new Error("Invalid API data");
     }
 
     initMenu(data);
+
   } catch (err) {
-    console.error("MENU LOAD ERROR:", err);
+    console.error("MENU LOAD FAILED:", err);
     hideSkeletons();
     if (loadingText) loadingText.innerText = "Failed to load menu";
   }
@@ -105,7 +106,17 @@ function initMenu(data) {
 
   CART_ENABLED = ["phase2", "phase3"].includes(norm(r.plan));
 
+  // 🔥 BUILD PRODUCT MAP (IMPORTANT)
+  (data.products || []).forEach(p => {
+    PRODUCT_MAP[p.id] = {
+      id: p.id,
+      name: p.name,
+      price: Number(p.price),
+    };
+  });
+
   renderCategories(data.categories || [], data.products || []);
+
   if (CART_ENABLED) initCartBar();
 }
 
@@ -113,12 +124,12 @@ function initMenu(data) {
    CATEGORIES
    =============================== */
 function renderCategories(categories, products) {
-  if (!categoriesDiv) return;
+  if (!categoriesEl || !productsEl) return;
 
-  categoriesDiv.innerHTML = "";
+  categoriesEl.innerHTML = "";
 
   if (!categories.length) {
-    productsDiv.innerHTML = "<p>No categories</p>";
+    productsEl.innerHTML = "<p>No categories</p>";
     return;
   }
 
@@ -128,26 +139,24 @@ function renderCategories(categories, products) {
     el.innerText = cat.name;
 
     el.onclick = () => {
-      document
-        .querySelectorAll(".category")
+      document.querySelectorAll(".category")
         .forEach(c => c.classList.remove("active"));
       el.classList.add("active");
       renderProducts(cat, products);
     };
 
-    categoriesDiv.appendChild(el);
+    categoriesEl.appendChild(el);
   });
 
   renderProducts(categories[0], products);
 }
 
 /* ===============================
-   PRODUCTS (SAFE MATCH)
+   PRODUCTS
    =============================== */
 function renderProducts(category, products) {
-  if (!productsDiv) return;
-
-  productsDiv.innerHTML = "";
+  if (!productsEl) return;
+  productsEl.innerHTML = "";
 
   const cid = norm(category.id);
   const cname = norm(category.name);
@@ -161,7 +170,7 @@ function renderProducts(category, products) {
   });
 
   if (!list.length) {
-    productsDiv.innerHTML = "<p>No products</p>";
+    productsEl.innerHTML = "<p>No products</p>";
     return;
   }
 
@@ -187,17 +196,16 @@ function renderProducts(category, products) {
         <div class="price-row">
           <span class="price">₹${p.price}</span>
           ${
-            CART_ENABLED
-              ? `<div class="qty">
-                   <button class="qty-btn" onclick="changeQty(${p.id},-1)">−</button>
-                   <span class="qty-count" id="q_${p.id}">0</span>
-                   <button class="qty-btn" onclick="changeQty(${p.id},1)">+</button>
-                 </div>`
-              : ""
+            CART_ENABLED ? `
+            <div class="qty">
+              <button class="qty-btn" onclick="changeQty(${p.id},-1)">−</button>
+              <span class="qty-count" id="q_${p.id}">0</span>
+              <button class="qty-btn" onclick="changeQty(${p.id},1)">+</button>
+            </div>` : ""
           }
         </div>
       </div>`;
-    productsDiv.appendChild(card);
+    productsEl.appendChild(card);
   });
 }
 
@@ -208,14 +216,10 @@ window.changeQty = function (id, diff) {
   let item = cart.find(i => i.id === id);
 
   if (!item && diff > 0) {
-    // 🔥 FIND PRODUCT DATA FROM DOM
-    const card = [...document.querySelectorAll(".product")]
-      .find(p => p.querySelector(".qty-count")?.id === "q_" + id);
+    const p = PRODUCT_MAP[id];
+    if (!p) return;
 
-    const name = card.querySelector("h3").innerText;
-    const price = Number(card.querySelector(".price").innerText.replace("₹", ""));
-
-    cart.push({ id, name, price, qty: 1 });
+    cart.push({ ...p, qty: 1 });
   }
   else if (item) {
     item.qty += diff;
@@ -224,12 +228,13 @@ window.changeQty = function (id, diff) {
     }
   }
 
-  document.getElementById("q_" + id).innerText =
-    cart.find(i => i.id === id)?.qty || 0;
+  const qtyEl = document.getElementById("q_" + id);
+  if (qtyEl) {
+    qtyEl.innerText = cart.find(i => i.id === id)?.qty || 0;
+  }
 
   updateCartBar();
 };
-
 
 /* ===============================
    CART BAR
@@ -254,13 +259,15 @@ function updateCartBar() {
   document.getElementById("cartText").innerText = total + " items";
 }
 
+/* ===============================
+   CHECKOUT
+   =============================== */
 window.goCheckout = function () {
   localStorage.setItem("cart", JSON.stringify(cart));
   location.href = "checkout.html?slug=" + slug;
 };
 
 /* ===============================
-   START (NO DOMCONTENTLOADED)
+   START
    =============================== */
 loadMenu();
-
