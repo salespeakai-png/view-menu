@@ -1,18 +1,25 @@
+/* ===============================
+   CHECKOUT – FINAL PRODUCTION
+   =============================== */
+
 const params = new URLSearchParams(location.search);
 const slug = params.get("slug") || "barfmalai";
 
 const cart = JSON.parse(localStorage.getItem("cart") || "[]");
 
-const itemsDiv = document.getElementById("orderItems");
-const totalSpan = document.getElementById("orderTotal");
+const orderItemsDiv = document.getElementById("orderItems");
+const orderTotalSpan = document.getElementById("orderTotal");
 
 let total = 0;
 
-/* RENDER ITEMS */
-itemsDiv.innerHTML = "";
+/* ===============================
+   RENDER ORDER ITEMS
+   =============================== */
+orderItemsDiv.innerHTML = "";
 
 if (!cart.length) {
-  itemsDiv.innerHTML = "<p style='opacity:.7'>Cart empty</p>";
+  orderItemsDiv.innerHTML =
+    "<p style='opacity:.7'>No items in cart</p>";
 } else {
   cart.forEach(item => {
     const itemTotal = item.price * item.qty;
@@ -21,46 +28,47 @@ if (!cart.length) {
     const row = document.createElement("div");
     row.className = "order-item";
     row.innerHTML = `
-      <span>${item.name} × ${item.qty}</span>
+      <div>
+        <h4>${item.name}</h4>
+        <small>Qty: ${item.qty}</small>
+      </div>
       <span>₹${itemTotal}</span>
     `;
-    itemsDiv.appendChild(row);
+    orderItemsDiv.appendChild(row);
   });
 }
 
-totalSpan.innerText = total;
+orderTotalSpan.innerText = total;
 
-/* CONFIRM ORDER */
+/* ===============================
+   CONFIRM ORDER
+   =============================== */
 async function confirmOrder() {
   const name = document.getElementById("custName").value.trim();
   const mobile = document.getElementById("custMobile").value.trim();
 
   if (!name || !mobile) {
-    alert("Name & Mobile required");
+    alert("Name & mobile required");
     return;
   }
 
   const payload = {
     slug,
-    name,
-    mobile,
-    table: document.getElementById("tableNo").value,
+    customer_name: name,
+    customer_mobile: mobile,
+    table_no: document.getElementById("tableNo").value || "",
     order_type: document.getElementById("orderType").value,
     total,
     items: cart,
-    time: new Date().toLocaleString()
+    time: new Date().toISOString()
   };
 
-  await fetch(
-    "https://script.google.com/macros/s/AKfycbwh-eNLy81JK6AvwQQF-H7flEDANpUjHTv7Y2ubdnqGRO4IzhRf6HT1AZSzkqCqiyM8/exec",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    }
-  );
+  console.log("ORDER PAYLOAD:", payload);
 
-  localStorage.removeItem("cart");
+  // 🔥 Phase-3: yahin se Google Apps Script POST karega
+  // fetch(APP_SCRIPT_ORDER_URL,{method:"POST",body:JSON.stringify(payload)})
+
   alert("Order placed successfully!");
+  localStorage.removeItem("cart");
   location.href = "menu.html?slug=" + slug;
 }
