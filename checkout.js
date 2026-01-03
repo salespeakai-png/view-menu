@@ -1,24 +1,18 @@
-/* ===============================
-   CHECKOUT – FINAL GOOGLE SHEET
-   =============================== */
-
 const params = new URLSearchParams(location.search);
 const slug = params.get("slug") || "barfmalai";
 
 const cart = JSON.parse(localStorage.getItem("cart") || "[]");
 
-const orderItemsDiv = document.getElementById("orderItems");
-const orderTotalSpan = document.getElementById("orderTotal");
+const itemsDiv = document.getElementById("orderItems");
+const totalSpan = document.getElementById("orderTotal");
 
 let total = 0;
 
-/* ===============================
-   RENDER CART
-   =============================== */
-orderItemsDiv.innerHTML = "";
+/* RENDER ITEMS */
+itemsDiv.innerHTML = "";
 
 if (!cart.length) {
-  orderItemsDiv.innerHTML = "<p>No items in cart</p>";
+  itemsDiv.innerHTML = "<p style='opacity:.7'>Cart empty</p>";
 } else {
   cart.forEach(item => {
     const itemTotal = item.price * item.qty;
@@ -30,15 +24,13 @@ if (!cart.length) {
       <span>${item.name} × ${item.qty}</span>
       <span>₹${itemTotal}</span>
     `;
-    orderItemsDiv.appendChild(row);
+    itemsDiv.appendChild(row);
   });
 }
 
-orderTotalSpan.innerText = total;
+totalSpan.innerText = total;
 
-/* ===============================
-   CONFIRM ORDER → GOOGLE SHEET
-   =============================== */
+/* CONFIRM ORDER */
 async function confirmOrder() {
   const name = document.getElementById("custName").value.trim();
   const mobile = document.getElementById("custMobile").value.trim();
@@ -49,35 +41,26 @@ async function confirmOrder() {
   }
 
   const payload = {
-    action: "createOrder",
     slug,
-    customer_name: name,
-    customer_mobile: mobile,
-    table_no: document.getElementById("tableNo").value || "",
+    name,
+    mobile,
+    table: document.getElementById("tableNo").value,
     order_type: document.getElementById("orderType").value,
     total,
-    items: cart
+    items: cart,
+    time: new Date().toLocaleString()
   };
 
-  try {
-    const res = await fetch(
-      "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec",
-      {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify(payload)
-      }
-    );
+  await fetch(
+    "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }
+  );
 
-    const data = await res.json();
-
-    if (!data.success) throw "Order failed";
-
-    localStorage.removeItem("cart");
-    alert("Order placed successfully!");
-    location.href = "menu.html?slug=" + slug;
-
-  } catch (e) {
-    alert("Order failed. Try again.");
-  }
+  localStorage.removeItem("cart");
+  alert("Order placed successfully!");
+  location.href = "menu.html?slug=" + slug;
 }
