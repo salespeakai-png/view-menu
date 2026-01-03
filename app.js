@@ -22,7 +22,7 @@ const productsDiv = $("products");
 const skeletonsDiv = $("skeletons");
 const loadingText = $("loadingText");
 
-/* ---------- CART ---------- */
+/* ---------- STATE ---------- */
 let CART_ENABLED = false;
 let cart = [];
 let PRODUCT_MAP = {};
@@ -34,8 +34,9 @@ const norm = v => String(v ?? "").trim().toLowerCase();
    SKELETON
    =============================== */
 function showSkeletons(count = 4) {
+  if (!skeletonsDiv) return;
   skeletonsDiv.innerHTML = "";
-  skeletonsDiv.style.display = "flex";
+  skeletonsDiv.style.display = "block";
 
   for (let i = 0; i < count; i++) {
     skeletonsDiv.innerHTML += `
@@ -51,6 +52,7 @@ function showSkeletons(count = 4) {
 }
 
 function hideSkeletons() {
+  if (!skeletonsDiv) return;
   skeletonsDiv.style.display = "none";
   skeletonsDiv.innerHTML = "";
 }
@@ -59,6 +61,7 @@ function hideSkeletons() {
    LOAD MENU
    =============================== */
 async function loadMenu() {
+  if (loadingText) loadingText.style.display = "block";
   showSkeletons();
 
   try {
@@ -69,12 +72,14 @@ async function loadMenu() {
       location.href = "menu-off.html?slug=" + slug;
       return;
     }
+    if (!data || data.error) throw new Error("Invalid API response");
 
     initMenu(data);
+
   } catch (err) {
     console.error("MENU ERROR:", err);
-    loadingText.innerText = "Failed to load menu";
     hideSkeletons();
+    if (loadingText) loadingText.innerText = "Failed to load menu";
   }
 }
 
@@ -83,16 +88,27 @@ async function loadMenu() {
    =============================== */
 function initMenu(data) {
   hideSkeletons();
-  loadingText.remove();
-  menuBox.style.display = "block";
+  if (loadingText) loadingText.remove();
+  if (menuBox) menuBox.style.display = "block";
 
   const r = data.restaurant || {};
 
-  menuLogo.src = r.logo_url || "assets/logo1.png";
-  menuLogo.onerror = () => (menuLogo.src = "assets/logo1.png");
-  menuName.innerText = r.name || "Menu";
+  if (menuLogo) {
+    menuLogo.src = r.logo_url || "assets/logo1.png";
+    menuLogo.onerror = () => (menuLogo.src = "assets/logo1.png");
+  }
+
+  if (menuName) {
+    menuName.innerText = r.name || "Menu";
+  }
 
   CART_ENABLED = ["phase2", "phase3"].includes(norm(r.plan));
+
+  // 🔥 PRODUCT MAP (CRITICAL FIX)
+  PRODUCT_MAP = {};
+  (data.products || []).forEach(p => {
+    PRODUCT_MAP[p.id] = p;
+  });
 
   renderCategories(data.categories || [], data.products || []);
   if (CART_ENABLED) initCartBar();
@@ -103,6 +119,11 @@ function initMenu(data) {
    =============================== */
 function renderCategories(categories, products) {
   categoriesDiv.innerHTML = "";
+
+  if (!categories.length) {
+    productsDiv.innerHTML = "<p>No categories</p>";
+    return;
+  }
 
   categories.forEach((cat, i) => {
     const el = document.createElement("div");
@@ -132,13 +153,19 @@ function renderProducts(category, products) {
   const cname = norm(category.name);
 
   const list = products.filter(p => {
-    const pc = norm(p.categoryId) || norm(p.category);
+    const pc =
+      norm(p.categoryId) ||
+      norm(p.category_id) ||
+      norm(p.category);
     return pc === cid || pc === cname;
   });
 
-  list.forEach(p => {
-    PRODUCT_MAP[p.id] = p;
+  if (!list.length) {
+    productsDiv.innerHTML = "<p>No products</p>";
+    return;
+  }
 
+  list.forEach(p => {
     const card = document.createElement("div");
     card.className = "product";
 
@@ -147,41 +174,36 @@ function renderProducts(category, products) {
            onerror="this.src='assets/placeholder.png'">
 
       <div class="product-info">
-        <div class="product-title">
-          <img class="veg-icon"
-               src="assets/${norm(p.veg)==='nonveg'?'nonveg':'veg'}.png">
-          <h3>${p.name}</h3>
-        </div>
-
+        <h3>${p.name}</h3>
         <p>${p.desc || ""}</p>
 
         <div class="price-row">
           <span class="price">₹${p.price}</span>
-
           ${
-            CART_ENABLED ? `
-            <div class="qty">
-              <button onclick="changeQty(${p.id},-1)">−</button>
-              <span id="q_${p.id}">0</span>
-              <button onclick="changeQty(${p.id},1)">+</button>
-            </div>` : ""
+            CART_ENABLED
+              ? `<div class="qty">
+                   <button onclick="changeQty(${p.id},-1)">−</button>
+                   <span id="q_${p.id}">0</span>
+                   <button onclick="changeQty(${p.id},1)">+</button>
+                 </div>`
+              : ""
           }
         </div>
-      </div>
-    `;
-
+      </div>`;
     productsDiv.appendChild(card);
   });
 }
 
 /* ===============================
-   CART LOGIC
+   CART LOGIC (FINAL FIX)
    =============================== */
-window.changeQty = function(id, diff) {
+window.changeQty = function (id, diff) {
+  const p = PRODUCT_MAP[id];
+  if (!p) return;
+
   let item = cart.find(i => i.id === id);
 
   if (!item && diff > 0) {
-    const p = PRODUCT_MAP[id];
     cart.push({
       id: p.id,
       name: p.name,
@@ -205,6 +227,8 @@ window.changeQty = function(id, diff) {
    CART BAR
    =============================== */
 function initCartBar() {
+  if ($("cartBar")) return;
+
   const bar = document.createElement("div");
   bar.id = "cartBar";
   bar.innerHTML = `
@@ -214,13 +238,15 @@ function initCartBar() {
 }
 
 function updateCartBar() {
+  const bar = $("cartBar");
+  if (!bar) return;
+
   const total = cart.reduce((s, i) => s + i.qty, 0);
-  const bar = document.getElementById("cartBar");
   bar.style.display = total ? "flex" : "none";
   $("cartText").innerText = total + " items";
 }
 
-window.goCheckout = function() {
+window.goCheckout = function () {
   localStorage.setItem("cart", JSON.stringify(cart));
   location.href = "checkout.html?slug=" + slug;
 };
@@ -229,3 +255,4 @@ window.goCheckout = function() {
    START
    =============================== */
 loadMenu();
+
