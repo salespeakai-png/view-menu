@@ -208,17 +208,28 @@ window.changeQty = function (id, diff) {
   let item = cart.find(i => i.id === id);
 
   if (!item && diff > 0) {
-    cart.push({ id, qty: 1 });
-  } else if (item) {
+    // 🔥 FIND PRODUCT DATA FROM DOM
+    const card = [...document.querySelectorAll(".product")]
+      .find(p => p.querySelector(".qty-count")?.id === "q_" + id);
+
+    const name = card.querySelector("h3").innerText;
+    const price = Number(card.querySelector(".price").innerText.replace("₹", ""));
+
+    cart.push({ id, name, price, qty: 1 });
+  }
+  else if (item) {
     item.qty += diff;
-    if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+    if (item.qty <= 0) {
+      cart = cart.filter(i => i.id !== id);
+    }
   }
 
-  const q = document.getElementById("q_" + id);
-  if (q) q.innerText = cart.find(i => i.id === id)?.qty || 0;
+  document.getElementById("q_" + id).innerText =
+    cart.find(i => i.id === id)?.qty || 0;
 
   updateCartBar();
 };
+
 
 /* ===============================
    CART BAR
@@ -252,3 +263,4 @@ window.goCheckout = function () {
    START (NO DOMCONTENTLOADED)
    =============================== */
 loadMenu();
+
