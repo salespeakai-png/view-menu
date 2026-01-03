@@ -146,7 +146,15 @@ body{
   <!-- FORM -->
   <div class="form">
     <input id="custName" placeholder="Customer Name *">
-    <input id="custMobile" placeholder="Mobile Number *">
+    <input 
+  id="custMobile"
+  placeholder="Mobile Number *"
+  type="tel"
+  inputmode="numeric"
+  maxlength="10"
+  pattern="[6-9]{1}[0-9]{9}"
+  required
+/>
     <input id="tableNo" placeholder="Table No (optional)">
 
     <select id="orderType">
