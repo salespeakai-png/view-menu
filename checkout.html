@@ -8,178 +8,161 @@
 <style>
 :root{
   --bg:#2a070a;
+  --bg2:#4a0d14;
   --gold:#d4af37;
-  --card:#fff;
+  --card:#ffffff;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 
 body{
-  margin:0;
-  font-family:system-ui;
-  background:linear-gradient(135deg,#4a0d14,#2a070a);
+  background:linear-gradient(135deg,var(--bg2),var(--bg));
   color:#222;
+  min-height:100vh;
   padding-bottom:90px;
 }
 
-h2{
+/* ===== HEADER ===== */
+.header{
+  padding:16px;
   color:#f5d27a;
+  font-size:20px;
+  font-weight:800;
+}
+
+/* ===== CONTAINER ===== */
+.checkout-container{
   padding:16px;
 }
 
+/* ===== ORDER ITEM ===== */
 .order-item{
-  background:#fff;
-  margin:12px 16px;
+  background:var(--card);
+  border-radius:16px;
   padding:14px;
-  border-radius:14px;
+  margin-bottom:12px;
   display:flex;
   justify-content:space-between;
   align-items:center;
+  box-shadow:0 8px 20px rgba(0,0,0,.25);
 }
 
 .order-item h4{
-  margin:0;
   font-size:15px;
+  font-weight:700;
+}
+
+.order-item small{
+  opacity:.7;
 }
 
 .order-item span{
   font-weight:800;
-  font-size:16px;
-  color:#2a070a;
+  color:var(--bg);
 }
 
+/* ===== TOTAL ===== */
 .total-box{
-  margin:16px;
-  padding:14px;
-  border-radius:14px;
-  background:linear-gradient(135deg,#f3d98b,#d4af37);
+  margin:18px 0;
+  background:linear-gradient(135deg,#f3d98b,var(--gold));
+  color:var(--bg);
   font-size:18px;
   font-weight:900;
   text-align:center;
+  padding:14px;
+  border-radius:16px;
 }
 
+/* ===== FORM ===== */
 .form{
-  background:#fff;
-  margin:16px;
+  background:var(--card);
+  border-radius:18px;
   padding:16px;
-  border-radius:14px;
+  box-shadow:0 10px 24px rgba(0,0,0,.3);
 }
 
-.form input,.form select{
+.form input,
+.form select{
   width:100%;
-  padding:12px;
+  padding:12px 14px;
   margin-bottom:12px;
-  border-radius:10px;
+  border-radius:12px;
   border:1px solid #ddd;
+  font-size:14px;
 }
 
+/* ===== FIXED BAR ===== */
 .checkout-bar{
   position:fixed;
   bottom:0;
   left:0;
   width:100%;
-  background:linear-gradient(135deg,#f3d98b,#d4af37);
+  background:linear-gradient(135deg,#f3d98b,var(--gold));
   display:flex;
   justify-content:space-between;
   align-items:center;
   padding:14px 18px;
+  box-shadow:0 -6px 22px rgba(0,0,0,.35);
+}
+
+.checkout-bar span{
+  font-size:15px;
+  font-weight:900;
+  color:var(--bg);
 }
 
 .checkout-bar button{
-  background:#2a070a;
-  color:#f5d27a;
-  border:none;
   padding:12px 22px;
+  border:none;
   border-radius:999px;
+  background:var(--bg);
+  color:#f5d27a;
+  font-size:14px;
   font-weight:800;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Order Summary</h2>
+<div class="header">Order Summary</div>
 
-<div id="orderItems"></div>
+<div class="checkout-container">
 
-<div class="total-box">
-  Total: ₹<span id="orderTotal">0</span>
+  <!-- ITEMS -->
+  <div id="orderItems"></div>
+
+  <!-- TOTAL -->
+  <div class="total-box">
+    Total: ₹<span id="orderTotal">0</span>
+  </div>
+
+  <!-- FORM -->
+  <div class="form">
+    <input id="custName" placeholder="Customer Name *">
+    <input id="custMobile" placeholder="Mobile Number *">
+    <input id="tableNo" placeholder="Table No (optional)">
+
+    <select id="orderType">
+      <option value="dine-in">Dine In</option>
+      <option value="takeaway">Takeaway</option>
+    </select>
+  </div>
+
 </div>
 
-<div class="form">
-  <input id="custName" placeholder="Customer Name *">
-  <input id="custMobile" placeholder="Mobile Number *">
-  <input id="tableNo" placeholder="Table No (optional)">
-
-  <select id="orderType">
-    <option value="dine-in">Dine In</option>
-    <option value="takeaway">Takeaway</option>
-  </select>
-</div>
-
+<!-- FIXED CONFIRM BAR -->
 <div class="checkout-bar">
   <span>Confirm your order</span>
   <button onclick="confirmOrder()">Confirm</button>
 </div>
 
-<script>
-const params = new URLSearchParams(location.search);
-const slug = params.get("slug") || "barfmalai";
-
-const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-const itemsDiv = document.getElementById("orderItems");
-const totalSpan = document.getElementById("orderTotal");
-
-let total = 0;
-itemsDiv.innerHTML = "";
-
-if (!cart.length) {
-  itemsDiv.innerHTML = "<p style='opacity:.6;margin:16px'>Cart empty</p>";
-} else {
-  cart.forEach(item => {
-    const t = item.price * item.qty;
-    total += t;
-
-    const row = document.createElement("div");
-    row.className = "order-item";
-    row.innerHTML = `
-      <div>
-        <h4>${item.name}</h4>
-        <small>Qty: ${item.qty}</small>
-      </div>
-      <span>₹${t}</span>
-    `;
-    itemsDiv.appendChild(row);
-  });
-}
-
-totalSpan.innerText = total;
-
-function confirmOrder(){
-  const name = custName.value.trim();
-  const mobile = custMobile.value.trim();
-
-  if(!name || !mobile){
-    alert("Name & Mobile required");
-    return;
-  }
-
-  const payload = {
-    slug,
-    customer_name:name,
-    customer_mobile:mobile,
-    table_no:tableNo.value,
-    order_type:orderType.value,
-    total,
-    items:cart,
-    time:new Date().toLocaleString()
-  };
-
-  console.log("ORDER:",payload);
-
-  alert("Order placed successfully!");
-  localStorage.removeItem("cart");
-  location.href="menu.html?slug="+slug;
-}
-</script>
-
+<script src="checkout.js"></script>
 </body>
 </html>
