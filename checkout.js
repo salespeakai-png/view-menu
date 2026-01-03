@@ -66,7 +66,6 @@ window.confirmOrder = async function () {
   const table_no        = tableNoInput.value.trim();
   const order_type      = orderTypeSelect.value;
 
-  /* ---------- VALIDATION ---------- */
   if (!customer_name) {
     alert("Customer name required");
     return;
@@ -82,7 +81,6 @@ window.confirmOrder = async function () {
     return;
   }
 
-  /* ---------- PAYLOAD ---------- */
   const payload = {
     slug,
     customer_name,
@@ -99,11 +97,11 @@ window.confirmOrder = async function () {
     }))
   };
 
-  /* ---------- GET REQUEST (NO CORS) ---------- */
   const url =
     ORDER_API +
-    "?action=order&data=" +
-    encodeURIComponent(JSON.stringify(payload));
+    "?action=order" +
+    "&slug=" + encodeURIComponent(slug) +
+    "&data=" + encodeURIComponent(JSON.stringify(payload));
 
   try {
     const res = await fetch(url);
@@ -125,3 +123,4 @@ window.confirmOrder = async function () {
     console.error(err);
   }
 };
+
