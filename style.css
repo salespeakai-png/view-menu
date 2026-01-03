@@ -150,56 +150,48 @@ body{
   display:flex;
   align-items:center;
   justify-content:space-between;
+  margin-top:8px;
 }
 
-.price{
-  background:linear-gradient(135deg,#f3d98b,#d4af37);
-  padding:4px 12px;
-  border-radius:999px;
-  font-weight:800;
-  color:#2a070a;
-  font-size:14px;
-}
-
-/* 🔥 QTY CONTROLS – PREMIUM FIX */
 .qty{
   display:flex;
   align-items:center;
   gap:10px;
+  margin-left:auto;
 }
 
-.qty{
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-
+/* PLUS / MINUS – FINAL POLISH */
 .qty-btn{
   width:34px;
   height:34px;
-  border-radius:50%;
-  font-size:20px;
-  line-height:1;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+
+  background:linear-gradient(135deg,#f3d98b,#d4af37);
+  color:#2a070a;
+  font-size:18px;
+  font-weight:900;
+
   display:flex;
   align-items:center;
   justify-content:center;
+
+  box-shadow:0 6px 14px rgba(0,0,0,.25);
 }
 
-.qty-btn:hover{
-  filter:brightness(1.05);
+.qty-btn:active{
+  transform:scale(.9);
 }
 
 .qty-count{
   min-width:26px;
-  height:26px;
-  border-radius:50%;
-  background:#2a070a;
-  color:#f5d27a;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:13px;
+  text-align:center;
+  font-size:15px;
+  font-weight:800;
+  color:#2a070a;
 }
+
 
 /* ================= SKELETON ================= */
 
@@ -284,4 +276,5 @@ footer{
   font-size:13px;
   opacity:.65;
 }
+
 
