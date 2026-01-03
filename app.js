@@ -1,18 +1,15 @@
-/* ==================================================
-   DIGITAL MENU – FINAL ALL PHASE APP.JS
-   PHASE 1 / 2 / 3 – ONE FILE
-   ================================================== */
+/* ===============================
+   DIGITAL MENU – FINAL STABLE FIX
+   =============================== */
 
-/* ---------- SLUG ---------- */
 const params = new URLSearchParams(window.location.search);
 const slug = params.get("slug") || "barfmalai";
 
-/* ---------- API ---------- */
 const API_URL =
   "https://script.google.com/macros/s/AKfycbwh-eNLy81JK6AvwQQF-H7flEDANpUjHTv7Y2ubdnqGRO4IzhRf6HT1AZSzkqCqiyM8/exec?slug=" +
   encodeURIComponent(slug);
 
-/* ---------- DOM ---------- */
+/* DOM */
 const menuLogo = document.getElementById("menuLogo");
 const menuName = document.getElementById("menuName");
 const categoriesDiv = document.getElementById("categories");
@@ -20,24 +17,27 @@ const productsDiv = document.getElementById("products");
 const skeletonsDiv = document.getElementById("skeletons");
 const loadingText = document.getElementById("loadingText");
 
-/* ---------- STATE ---------- */
-let PLAN = "phase1";
+/* CART */
+let CART_ENABLED = false;
 let cart = [];
 
-/* ---------- UTILS ---------- */
+/* UTILS */
 const norm = v => String(v ?? "").trim().toLowerCase();
 
-/* ==================================================
-   SKELETON
-   ================================================== */
+/* ===============================
+   SKELETON (GUARDED)
+   =============================== */
+let skeletonTimer;
+
 function showSkeletons(count = 4) {
-  skeletonsDiv.style.display = "flex";
   skeletonsDiv.innerHTML = "";
+  skeletonsDiv.style.display = "flex";
+
   for (let i = 0; i < count; i++) {
     skeletonsDiv.innerHTML += `
       <div class="skeleton-card">
         <div class="skeleton-img"></div>
-        <div class="skeleton-lines">
+        <div style="flex:1">
           <div class="skeleton-line"></div>
           <div class="skeleton-line short"></div>
           <div class="skeleton-line price"></div>
@@ -51,33 +51,39 @@ function hideSkeletons() {
   skeletonsDiv.innerHTML = "";
 }
 
-/* ==================================================
-   LOAD MENU
-   ================================================== */
+/* ===============================
+   LOAD MENU (STABLE)
+   =============================== */
 async function loadMenu() {
   showSkeletons();
+
+  // Minimum skeleton time (IMPORTANT)
+  skeletonTimer = new Promise(res => setTimeout(res, 1200));
 
   try {
     const res = await fetch(API_URL, { cache: "no-store" });
     const data = await res.json();
 
+    await skeletonTimer;
+
     if (data?.error === "MENU_OFF") {
       location.href = "menu-off.html?slug=" + slug;
       return;
     }
-
     if (data?.error) throw data.error;
 
     initMenu(data);
-  } catch (e) {
-    console.error("MENU LOAD ERROR:", e);
-    loadingText.innerText = "Unable to load menu";
+
+  } catch (err) {
+    console.error("MENU ERROR:", err);
+    loadingText.innerText = "Failed to load menu";
+    hideSkeletons();
   }
 }
 
-/* ==================================================
+/* ===============================
    INIT MENU
-   ================================================== */
+   =============================== */
 function initMenu(data) {
   hideSkeletons();
   loadingText?.remove();
@@ -88,21 +94,20 @@ function initMenu(data) {
   menuLogo.onerror = () => (menuLogo.src = "assets/logo1.png");
   menuName.innerText = r.name || "Menu";
 
-  PLAN = norm(r.plan || "phase1");
+  CART_ENABLED = ["phase2", "phase3"].includes(norm(r.plan));
 
   renderCategories(data.categories || [], data.products || []);
-
-  if (PLAN !== "phase1") initCartBar();
+  if (CART_ENABLED) initCartBar();
 }
 
-/* ==================================================
+/* ===============================
    CATEGORIES
-   ================================================== */
+   =============================== */
 function renderCategories(categories, products) {
   categoriesDiv.innerHTML = "";
 
   if (!categories.length) {
-    productsDiv.innerHTML = "<p style='color:#fff'>No categories</p>";
+    productsDiv.innerHTML = "<p>No categories</p>";
     return;
   }
 
@@ -124,9 +129,9 @@ function renderCategories(categories, products) {
   renderProducts(categories[0], products);
 }
 
-/* ==================================================
-   PRODUCTS
-   ================================================== */
+/* ===============================
+   PRODUCTS (FIXED MATCHING)
+   =============================== */
 function renderProducts(category, products) {
   productsDiv.innerHTML = "";
 
@@ -134,12 +139,15 @@ function renderProducts(category, products) {
   const cname = norm(category.name);
 
   const list = products.filter(p => {
-    const pid = norm(p.category_id || p.categoryId || p.category);
-    return pid === cid || pid === cname;
+    const pc =
+      norm(p.categoryId) ||
+      norm(p.category_id) ||
+      norm(p.category);
+    return pc === cid || pc === cname;
   });
 
   if (!list.length) {
-    productsDiv.innerHTML = "<p style='color:#fff'>No products</p>";
+    productsDiv.innerHTML = "<p>No products</p>";
     return;
   }
 
@@ -148,45 +156,37 @@ function renderProducts(category, products) {
     card.className = "product";
 
     card.innerHTML = `
-      <img src="${p.image || "assets/placeholder.png"}"
-           onload="this.classList.add('loaded')">
+      <img src="${p.image}" onload="this.classList.add('loaded')" />
       <div class="product-info">
         <div class="product-title">
-          <img class="veg-icon"
-               src="assets/${norm(p.veg)==="nonveg"?"nonveg":"veg"}.png">
+          <img class="veg-icon" src="assets/${norm(p.veg)==="nonveg"?"nonveg":"veg"}.png">
           <h3>${p.name}</h3>
         </div>
         <p>${p.desc || ""}</p>
         <div class="price-row">
           <span class="price">₹${p.price}</span>
-          ${PLAN !== "phase1" ? `
-          <div class="qty">
-            <button class="qty-btn" onclick="changeQty(${p.id},-1)">−</button>
-            <span class="qty-count" id="q_${p.id}">0</span>
-            <button class="qty-btn" onclick="changeQty(${p.id},1)">+</button>
-          </div>` : ""}
+          ${
+            CART_ENABLED ? `
+            <div class="qty">
+              <button class="qty-btn" onclick="changeQty(${p.id},-1)">−</button>
+              <span class="qty-count" id="q_${p.id}">0</span>
+              <button class="qty-btn" onclick="changeQty(${p.id},1)">+</button>
+            </div>` : ""
+          }
         </div>
-      </div>
-    `;
-
+      </div>`;
     productsDiv.appendChild(card);
   });
 }
 
-/* ==================================================
-   CART LOGIC (PHASE 2 / 3)
-   ================================================== */
+/* ===============================
+   CART
+   =============================== */
 window.changeQty = function(id, diff) {
   let item = cart.find(i => i.id === id);
 
   if (!item && diff > 0) {
-    const card = document.getElementById("q_" + id).closest(".product");
-    cart.push({
-      id,
-      name: card.querySelector("h3").innerText,
-      price: parseInt(card.querySelector(".price").innerText.replace("₹","")),
-      qty: 1
-    });
+    cart.push({ id, qty: 1 });
   } else if (item) {
     item.qty += diff;
     if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
@@ -220,7 +220,7 @@ window.goCheckout = function() {
   location.href = "checkout.html?slug=" + slug;
 };
 
-/* ==================================================
+/* ===============================
    START
-   ================================================== */
-loadMenu();
+   =============================== */
+document.addEventListener("DOMContentLoaded", loadMenu);
