@@ -1,5 +1,5 @@
 const ORDER_API_URL =
-  "https://script.google.com/macros/s/AKfycbxY0AasRRRGYd_BBLf1ZfN5Zdje2P5IU0zF8DbFe7k6jXSszN3N79ZhCTw8G5Pyhwk5/exec";
+  "https://script.google.com/macros/s/AKfycbxqk9GH28xsHG9PiKjQ8lkYJYJGKgF7W_Fcy2HyjwGUBIh3u1WByv3jbfSx_HT9nm-K/exec";
 
 window.confirmOrder = async function () {
 
