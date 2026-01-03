@@ -1,64 +1,5 @@
-/* ===============================
-   CHECKOUT – FINAL PRODUCTION SAFE
-   =============================== */
-
-const params = new URLSearchParams(window.location.search);
-const slug = params.get("slug") || "barfmalai";
-
-/* DOM */
-const orderItemsDiv = document.getElementById("orderItems");
-const orderTotalSpan = document.getElementById("orderTotal");
-
-const custNameInput   = document.getElementById("custName");
-const custMobileInput = document.getElementById("custMobile");
-const tableNoInput    = document.getElementById("tableNo");
-const orderTypeSelect = document.getElementById("orderType");
-
-/* CART */
-let cart = [];
-try {
-  cart = JSON.parse(localStorage.getItem("cart")) || [];
-} catch {
-  cart = [];
-}
-
-/* ===============================
-   RENDER ORDER
-   =============================== */
-
-let total = 0;
-orderItemsDiv.innerHTML = "";
-
-if (!cart.length) {
-  orderItemsDiv.innerHTML =
-    "<p style='opacity:.6;margin:16px'>Your cart is empty</p>";
-} else {
-  cart.forEach(item => {
-    const name  = String(item.name || "Item");
-    const qty   = Number(item.qty) || 0;
-    const price = Number(item.price) || 0;
-
-    const itemTotal = qty * price;
-    total += itemTotal;
-
-    const row = document.createElement("div");
-    row.className = "order-item";
-    row.innerHTML = `
-      <div>
-        <h4>${name}</h4>
-        <small>Qty: ${qty}</small>
-      </div>
-      <span>₹${itemTotal}</span>
-    `;
-    orderItemsDiv.appendChild(row);
-  });
-}
-
-orderTotalSpan.innerText = total;
-
-/* ===============================
-   CONFIRM ORDER
-   =============================== */
+const ORDER_API_URL =
+  "https://script.google.com/macros/s/AKfycbxY0AasRRRGYd_BBLf1ZfN5Zdje2P5IU0zF8DbFe7k6jXSszN3N79ZhCTw8G5Pyhwk5/exec";
 
 window.confirmOrder = async function () {
 
@@ -68,12 +9,12 @@ window.confirmOrder = async function () {
   const order_type      = orderTypeSelect.value;
 
   if (!customer_name) {
-    alert("Customer name required");
+    alert("Enter customer name");
     return;
   }
 
   if (!/^[6-9]\d{9}$/.test(customer_mobile)) {
-    alert("Enter valid 10 digit mobile number");
+    alert("Enter valid 10-digit mobile number");
     return;
   }
 
@@ -92,16 +33,26 @@ window.confirmOrder = async function () {
     items: cart.map(i => ({
       id: i.id,
       name: i.name,
-      qty: i.qty,
-      price: i.price,
-      amount: i.qty * i.price
-    })),
-    time: new Date().toISOString()
+      price: Number(i.price),
+      qty: Number(i.qty),
+      amount: Number(i.price) * Number(i.qty)
+    }))
   };
 
-  console.log("ORDER PAYLOAD:", payload);
+  try {
+    const res = await fetch(ORDER_API_URL, {
+      method: "POST",
+      mode: "no-cors", // 🔥 VERY IMPORTANT FOR APPSCRIPT
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
 
-  alert("Order placed successfully!");
-  localStorage.removeItem("cart");
-  location.href = "menu.html?slug=" + slug;
+    alert("Order placed successfully!");
+    localStorage.removeItem("cart");
+    location.href = "menu.html?slug=" + slug;
+
+  } catch (err) {
+    alert("Order failed. Try again.");
+    console.error(err);
+  }
 };
