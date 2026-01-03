@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checkout</title>
 
 <style>
@@ -10,72 +10,103 @@
   --bg:#2a070a;
   --gold:#d4af37;
   --card:#ffffff;
+  --dark:#1b0406;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 
 body{
-  margin:0;
-  font-family:system-ui, sans-serif;
+  min-height:100vh;
   background:linear-gradient(135deg,#4a0d14,#2a070a);
   color:#222;
-  padding-bottom:90px;
+  padding-bottom:100px;
 }
 
+/* ================= HEADER ================= */
 .header{
-  padding:16px;
-  color:#f5d27a;
+  padding:16px 18px;
   font-size:20px;
-  font-weight:700;
+  font-weight:800;
+  color:#f5d27a;
 }
 
-.container{
-  padding:16px;
+/* ================= CONTAINER ================= */
+.checkout-container{
+  padding:0 16px;
+  max-width:720px;
+  margin:auto;
+}
+
+/* ================= ORDER ITEMS ================= */
+#orderItems{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
 }
 
 .order-item{
-  background:#fff;
+  background:rgba(255,255,255,.96);
   border-radius:16px;
-  padding:12px;
-  margin-bottom:12px;
+  padding:14px;
   display:flex;
   justify-content:space-between;
   align-items:center;
+  box-shadow:0 10px 26px rgba(0,0,0,.35);
 }
 
-.order-item h4{
-  margin:0;
-  font-size:14px;
+.order-item b{
+  font-size:15px;
+  color:#2a070a;
 }
 
 .order-item small{
-  opacity:.6;
+  font-size:12px;
+  opacity:.65;
 }
 
+.order-item span{
+  font-weight:900;
+  color:#2a070a;
+}
+
+/* ================= TOTAL ================= */
 .total-box{
   margin:18px 0;
+  padding:14px;
+  border-radius:16px;
   background:linear-gradient(135deg,#f3d98b,#d4af37);
   color:#2a070a;
+  font-size:18px;
   font-weight:900;
   text-align:center;
-  padding:14px;
-  border-radius:14px;
+  box-shadow:0 8px 22px rgba(0,0,0,.35);
 }
 
+/* ================= FORM ================= */
 .form{
-  background:#fff;
-  border-radius:16px;
+  background:rgba(255,255,255,.96);
+  border-radius:18px;
   padding:16px;
+  box-shadow:0 10px 26px rgba(0,0,0,.35);
 }
 
-.form input, .form select{
+.form input,
+.form select{
   width:100%;
-  padding:12px;
+  padding:12px 14px;
   margin-bottom:12px;
-  border-radius:10px;
+  border-radius:12px;
   border:1px solid #ddd;
   font-size:14px;
 }
 
-.checkout-bar{
+/* ================= FIXED CONFIRM BAR ================= */
+.confirm-bar{
   position:fixed;
   bottom:0;
   left:0;
@@ -85,16 +116,28 @@ body{
   justify-content:space-between;
   align-items:center;
   padding:14px 18px;
+  box-shadow:0 -6px 22px rgba(0,0,0,.35);
 }
 
-.checkout-bar button{
+.confirm-bar span{
+  font-size:16px;
+  font-weight:900;
+  color:#2a070a;
+}
+
+.confirm-bar button{
+  border:none;
+  padding:12px 26px;
+  border-radius:999px;
   background:#2a070a;
   color:#f5d27a;
-  border:none;
-  border-radius:999px;
-  padding:10px 22px;
+  font-size:14px;
   font-weight:800;
   cursor:pointer;
+}
+
+.confirm-bar button:active{
+  transform:scale(.95);
 }
 </style>
 </head>
@@ -103,120 +146,35 @@ body{
 
 <div class="header">Order Summary</div>
 
-<div class="container">
+<div class="checkout-container">
+
+  <!-- ITEMS -->
   <div id="orderItems"></div>
 
+  <!-- TOTAL -->
   <div class="total-box">
     Total: ₹<span id="orderTotal">0</span>
   </div>
 
+  <!-- FORM -->
   <div class="form">
-    <input id="custName" placeholder="Customer Name *" />
-    <input id="custMobile" placeholder="Mobile Number *" maxlength="10" />
-    <input id="tableNo" placeholder="Table No (optional)" />
-
+    <input id="custName" placeholder="Customer Name *">
+    <input id="custMobile" placeholder="Mobile Number *" maxlength="10">
+    <input id="tableNo" placeholder="Table No (optional)">
     <select id="orderType">
       <option value="dine-in">Dine In</option>
       <option value="takeaway">Takeaway</option>
     </select>
   </div>
+
 </div>
 
-<div class="checkout-bar">
+<!-- FIXED CONFIRM -->
+<div class="confirm-bar">
   <span>Confirm your order</span>
   <button onclick="confirmOrder()">Confirm</button>
 </div>
 
-<script>
-/* ---------- PARAM ---------- */
-const params = new URLSearchParams(location.search);
-const slug = params.get("slug") || "barfmalai";
-
-/* ---------- CART LOAD ---------- */
-let cart = [];
-try{
-  cart = JSON.parse(localStorage.getItem("cart")) || [];
-}catch(e){ cart = []; }
-
-const orderItemsDiv = document.getElementById("orderItems");
-const orderTotalSpan = document.getElementById("orderTotal");
-
-let total = 0;
-
-/* ---------- RENDER CART ---------- */
-if(!cart.length){
-  orderItemsDiv.innerHTML =
-    "<p style='opacity:.6'>Your cart is empty</p>";
-}else{
-  cart.forEach(item=>{
-    const name = item.name || "Item";
-    const qty = Number(item.qty) || 0;
-    const price = Number(item.price) || 0;
-    const amount = qty * price;
-
-    total += amount;
-
-    const row = document.createElement("div");
-    row.className = "order-item";
-    row.innerHTML = `
-      <div>
-        <h4>${name}</h4>
-        <small>Qty: ${qty}</small>
-      </div>
-      <strong>₹${amount}</strong>
-    `;
-    orderItemsDiv.appendChild(row);
-  });
-}
-
-orderTotalSpan.innerText = total;
-
-/* ---------- CONFIRM ---------- */
-function confirmOrder(){
-  const name = custName.value.trim();
-  const mobile = custMobile.value.trim();
-
-  if(!name){
-    alert("Enter customer name");
-    return;
-  }
-
-  if(!/^[0-9]{10}$/.test(mobile)){
-    alert("Enter valid 10 digit mobile number");
-    return;
-  }
-
-  if(!cart.length){
-    alert("Cart is empty");
-    return;
-  }
-
-  const payload = {
-    slug,
-    customer_name:name,
-    customer_mobile:mobile,
-    table_no:tableNo.value.trim(),
-    order_type:orderType.value,
-    total,
-    items:cart,
-    time:new Date().toISOString()
-  };
-
-  console.log("ORDER PAYLOAD", payload);
-
-  /* 🔗 AppScript POST (activate later)
-  fetch("YOUR_APPSCRIPT_EXEC_URL",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify(payload)
-  });
-  */
-
-  alert("Order placed!");
-  localStorage.removeItem("cart");
-  location.href = "menu.html?slug="+slug;
-}
-</script>
-
+<script src="checkout.js"></script>
 </body>
 </html>
