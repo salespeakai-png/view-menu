@@ -219,7 +219,12 @@ window.changeQty = function (id, diff) {
     const p = PRODUCT_MAP[id];
     if (!p) return;
 
-    cart.push({ ...p, qty: 1 });
+    cart.push({
+      id: p.id,
+      name: p.name,
+      price: Number(p.price),
+      qty: 1
+    });
   }
   else if (item) {
     item.qty += diff;
@@ -235,6 +240,7 @@ window.changeQty = function (id, diff) {
 
   updateCartBar();
 };
+
 
 /* ===============================
    CART BAR
@@ -271,3 +277,4 @@ window.goCheckout = function () {
    START
    =============================== */
 loadMenu();
+
