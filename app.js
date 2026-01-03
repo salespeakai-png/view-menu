@@ -8,7 +8,7 @@ const slug = params.get("slug") || "barfmalai";
 
 /* ---------- API ---------- */
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbwh-eNLy81JK6AvwQQF-H7flEDANpUjHTv7Y2ubdnqGRO4IzhRf6HT1AZSzkqCqiyM8/exec?slug=" +
+  "https://script.google.com/macros/s/AKfycbxY0AasRRRGYd_BBLf1ZfN5Zdje2P5IU0zF8DbFe7k6jXSszN3N79ZhCTw8G5Pyhwk5/exec?slug=" +
   encodeURIComponent(slug);
 
 /* ---------- DOM ---------- */
@@ -255,4 +255,5 @@ window.goCheckout = function () {
    START
    =============================== */
 loadMenu();
+
 
