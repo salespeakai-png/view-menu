@@ -166,19 +166,33 @@ function renderProducts(category, products) {
   }
 
   list.forEach(p => {
+    const vegType = norm(p.veg);
+    const vegIcon =
+      vegType === "nonveg"
+        ? "assets/nonveg.png"
+        : "assets/veg.png";
+
     const card = document.createElement("div");
     card.className = "product";
 
     card.innerHTML = `
-      <img src="${p.image}" loading="lazy"
+      <img src="${p.image}"
+           loading="lazy"
+           onload="this.classList.add('loaded')"
            onerror="this.src='assets/placeholder.png'">
 
       <div class="product-info">
-        <h3>${p.name}</h3>
+
+        <div class="product-title">
+          <img class="veg-icon" src="${vegIcon}">
+          <h3>${p.name}</h3>
+        </div>
+
         <p>${p.desc || ""}</p>
 
         <div class="price-row">
           <span class="price">₹${p.price}</span>
+
           ${
             CART_ENABLED
               ? `<div class="qty">
@@ -189,10 +203,13 @@ function renderProducts(category, products) {
               : ""
           }
         </div>
-      </div>`;
+      </div>
+    `;
+
     productsDiv.appendChild(card);
   });
 }
+
 
 /* ===============================
    CART LOGIC (FINAL FIX)
@@ -268,6 +285,7 @@ if (banners.length > 1) {
    START
    =============================== */
 loadMenu();
+
 
 
 
