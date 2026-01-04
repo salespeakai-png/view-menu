@@ -110,8 +110,6 @@ body{
   object-fit:cover;
   box-shadow:0 6px 14px rgba(0,0,0,.25);
   background:#eee;
-  filter: none;
-  transform: none;
 }
 
 .product-img.loaded {
@@ -340,6 +338,7 @@ footer{
   font-size:13px;
   opacity:.65;
 }
+
 
 
 
