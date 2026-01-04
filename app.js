@@ -1,7 +1,7 @@
-/* =====================================
+/* =================================================
    DIGITAL MENU – PHASE 1 (VIEW ONLY)
-   NO CART • NO CHECKOUT • STABLE
-   ===================================== */
+   FINAL + STABLE + NO CACHE ISSUE
+   ================================================= */
 
 /* ---------- SLUG ---------- */
 const params = new URLSearchParams(window.location.search);
@@ -10,20 +10,44 @@ const slug = params.get("slug") || "barfmalai";
 /* ---------- API ---------- */
 const API_URL =
   "https://script.google.com/macros/s/AKfycbxC1ntR-pFyjgjROeeyyI-Pa93KlF-DLNChJSS2MGQ6cCTIQSPznzH_VBaQPUOlBHb3/exec?slug=" +
-  encodeURIComponent(slug);
+  encodeURIComponent(slug) +
+  "&t=" + Date.now(); // 🔥 cache-buster
 
 /* ---------- DOM ---------- */
-const menuLogo = document.getElementById("menuLogo");
-const menuName = document.getElementById("menuName");
-const categoriesDiv = document.getElementById("categories");
-const productsDiv = document.getElementById("products");
-const skeletonsDiv = document.getElementById("skeletons");
+const $ = id => document.getElementById(id);
 
-/* ---------- UTILS ---------- */
+const menuLogo = $("menuLogo");
+const menuName = $("menuName");
+const categoriesDiv = $("categories");
+const productsDiv = $("products");
+const skeletonsDiv = $("skeletons");
+
+/* =================================================
+   HELPERS
+   ================================================= */
+
+const today = () => new Date().toISOString().slice(0, 10);
+
+function isMenuActive(r) {
+  if (!r) return false;
+  if (r.status !== "active") return false;
+
+  const t = today();
+
+  if (r.paid_until && t <= r.paid_until) return true;
+  if (r.trial_end && t <= r.trial_end) return true;
+
+  return false;
+}
+
 const norm = v => String(v ?? "").trim().toLowerCase();
 
-/* ---------- SKELETON ---------- */
+/* =================================================
+   SKELETON
+   ================================================= */
+
 function showSkeletons(count = 4) {
+  if (!skeletonsDiv) return;
   skeletonsDiv.innerHTML = "";
   skeletonsDiv.style.display = "block";
 
@@ -33,8 +57,8 @@ function showSkeletons(count = 4) {
         <div class="skeleton-img"></div>
         <div class="skeleton-lines">
           <div class="skeleton-line"></div>
-          <div class="skeleton-line"></div>
-          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line price"></div>
         </div>
       </div>
     `;
@@ -42,50 +66,64 @@ function showSkeletons(count = 4) {
 }
 
 function hideSkeletons() {
+  if (!skeletonsDiv) return;
   skeletonsDiv.style.display = "none";
   skeletonsDiv.innerHTML = "";
 }
 
-/* ---------- LOAD MENU ---------- */
+/* =================================================
+   LOAD MENU
+   ================================================= */
+
 async function loadMenu() {
   showSkeletons();
 
   try {
-    const res = await fetch(API_URL, { cache: "no-store" });
-    const data = await res.json();
+    const res = await fetch(API_URL, {
+      cache: "no-store"
+    });
 
-    if (!data || data.error) {
-      throw new Error("Menu error");
-    }
+    const data = await res.json();
+    if (!data || data.error) throw "Invalid API";
 
     initMenu(data);
 
-  } catch (e) {
-    console.error("MENU LOAD ERROR", e);
+  } catch (err) {
+    console.error("MENU LOAD ERROR:", err);
     hideSkeletons();
     productsDiv.innerHTML =
-      "<p style='color:#fff;text-align:center'>Menu unavailable</p>";
+      "<p style='text-align:center'>Menu unavailable</p>";
   }
 }
 
-/* ---------- INIT MENU ---------- */
-function initMenu(data) {
-  hideSkeletons();
+/* =================================================
+   INIT MENU
+   ================================================= */
 
+function initMenu(data) {
   const r = data.restaurant || {};
 
-  menuLogo.src = r.logo_url || "assets/logo1.png";
-  menuLogo.onerror = function () {
-    menuLogo.src = "assets/logo1.png";
-  };
+  // ❌ MENU OFF
+  if (!isMenuActive(r)) {
+    location.href = "menu-off.html?slug=" + slug;
+    return;
+  }
 
+  hideSkeletons();
+
+  // Header
+  menuLogo.src = r.logo_url || "assets/logo1.png";
+  menuLogo.onerror = () => (menuLogo.src = "assets/logo1.png");
   menuName.innerText = r.name || "Menu";
 
   renderCategories(data.categories || [], data.products || []);
   initBannerSlider();
 }
 
-/* ---------- CATEGORIES ---------- */
+/* =================================================
+   CATEGORIES
+   ================================================= */
+
 function renderCategories(categories, products) {
   categoriesDiv.innerHTML = "";
 
@@ -94,9 +132,9 @@ function renderCategories(categories, products) {
     return;
   }
 
-  categories.forEach((cat, index) => {
+  categories.forEach((cat, i) => {
     const el = document.createElement("div");
-    el.className = "category" + (index === 0 ? " active" : "");
+    el.className = "category" + (i === 0 ? " active" : "");
     el.innerText = cat.name;
 
     el.onclick = () => {
@@ -112,7 +150,10 @@ function renderCategories(categories, products) {
   renderProducts(categories[0], products);
 }
 
-/* ---------- PRODUCTS ---------- */
+/* =================================================
+   PRODUCTS
+   ================================================= */
+
 function renderProducts(category, products) {
   productsDiv.innerHTML = "";
 
@@ -128,12 +169,13 @@ function renderProducts(category, products) {
   });
 
   if (!list.length) {
-    productsDiv.innerHTML =
-      "<p style='color:#fff'>No products</p>";
+    productsDiv.innerHTML = "<p>No products</p>";
     return;
   }
 
   list.forEach(p => {
+    const isVeg = norm(p.veg) !== "nonveg";
+
     const card = document.createElement("div");
     card.className = "product";
 
@@ -144,9 +186,16 @@ function renderProducts(category, products) {
            onerror="this.src='assets/placeholder.png'">
 
       <div class="product-info">
-        <h3>${p.name}</h3>
+        <div class="product-title">
+          <span class="veg-dot ${isVeg ? "veg" : "nonveg"}"></span>
+          <h3>${p.name}</h3>
+        </div>
+
         <p>${p.desc || ""}</p>
-        <div class="price">₹${p.price}</div>
+
+        <div class="price-row">
+          <span class="price">₹${p.price}</span>
+        </div>
       </div>
     `;
 
@@ -154,18 +203,26 @@ function renderProducts(category, products) {
   });
 }
 
-/* ---------- BANNER SLIDER ---------- */
+/* =================================================
+   BANNER SLIDER
+   ================================================= */
+
 function initBannerSlider() {
   const banners = document.querySelectorAll(".banner-img");
   if (banners.length <= 1) return;
 
-  let i = 0;
+  let index = 0;
   setInterval(() => {
-    banners[i].classList.remove("active");
-    i = (i + 1) % banners.length;
-    banners[i].classList.add("active");
+    banners[index].classList.remove("active");
+    index = (index + 1) % banners.length;
+    banners[index].classList.add("active");
   }, 3500);
 }
 
-/* ---------- START ---------- */
-document.addEventListener("DOMContentLoaded", loadMenu);
+/* =================================================
+   START
+   ================================================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadMenu();
+});
