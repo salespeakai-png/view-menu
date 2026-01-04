@@ -277,4 +277,8 @@ function initBannerSlider() {
 /* ===============================
    START
    =============================== */
-loadMenu();
+document.addEventListener("DOMContentLoaded", () => {
+  loadMenu();
+});
+
+
