@@ -1,172 +1,82 @@
-/* =================================================
-   DIGITAL MENU – PHASE 1 (VIEW ONLY)
-   FINAL + STABLE + NO CACHE ISSUE
-   ================================================= */
+/* ===============================
+   DIGITAL MENU – PHASE 1 ONLY
+   =============================== */
 
-/* ---------- SLUG ---------- */
-const params = new URLSearchParams(window.location.search);
-const slug = params.get("slug") || "barfmalai";
+const slug = new URLSearchParams(location.search).get("slug") || "barfmalai";
 
-/* ---------- API ---------- */
-const API_URL =
-  "https://script.google.com/macros/s/AKfycbz7R2QyeInZ8_-N2R5JmFv_DkXaUyCFjQiGO55ueYaFeGaBui2rJ-BKNJFV9xaIaLK7/exec?slug=" +
-  encodeURIComponent(slug) +
-  "&t=" + Date.now(); // 🔥 cache-buster
+const API =
+  "https://script.google.com/macros/s/AKfycbxeK9xFt9WBMqFbCLW8p8QauIHXe5CrdA0-PHcA_bNv-CzXDEtlhsw5bXMxh2OqKnQF/exec?slug=" +
+  encodeURIComponent(slug);
 
-/* ---------- DOM ---------- */
+/* DOM */
 const $ = id => document.getElementById(id);
-
+const loadingText = $("loadingText");
+const menuBox = $("menu");
 const menuLogo = $("menuLogo");
 const menuName = $("menuName");
 const categoriesDiv = $("categories");
 const productsDiv = $("products");
-const skeletonsDiv = $("skeletons");
 
-/* =================================================
-   HELPERS
-   ================================================= */
+const norm = v => String(v || "").toLowerCase().trim();
 
-const today = () => new Date().toISOString().slice(0, 10);
-
-function isMenuActive(r) {
-  if (!r) return false;
-  if (r.status !== "active") return false;
-
-  const t = today();
-
-  if (r.paid_until && t <= r.paid_until) return true;
-  if (r.trial_end && t <= r.trial_end) return true;
-
-  return false;
-}
-
-const norm = v => String(v ?? "").trim().toLowerCase();
-
-/* =================================================
-   SKELETON
-   ================================================= */
-
-function showSkeletons(count = 4) {
-  if (!skeletonsDiv) return;
-  skeletonsDiv.innerHTML = "";
-  skeletonsDiv.style.display = "block";
-
-  for (let i = 0; i < count; i++) {
-    skeletonsDiv.innerHTML += `
-      <div class="skeleton-card">
-        <div class="skeleton-img"></div>
-        <div class="skeleton-lines">
-          <div class="skeleton-line"></div>
-          <div class="skeleton-line short"></div>
-          <div class="skeleton-line price"></div>
-        </div>
-      </div>
-    `;
-  }
-}
-
-function hideSkeletons() {
-  if (!skeletonsDiv) return;
-  skeletonsDiv.style.display = "none";
-  skeletonsDiv.innerHTML = "";
-}
-
-/* =================================================
-   LOAD MENU
-   ================================================= */
-
+/* LOAD MENU */
 async function loadMenu() {
-  showSkeletons();
-
   try {
-    const res = await fetch(API_URL, {
-      cache: "no-store"
-    });
-
+    const res = await fetch(API, { cache: "no-store" });
     const data = await res.json();
-    if (!data || data.error) throw "Invalid API";
 
-    initMenu(data);
+    if (data.error === "MENU_OFF") {
+      loadingText.innerText = "Menu not available";
+      return;
+    }
 
-  } catch (err) {
-    console.error("MENU LOAD ERROR:", err);
-    hideSkeletons();
-    productsDiv.innerHTML =
-      "<p style='text-align:center'>Menu unavailable</p>";
+    renderMenu(data);
+
+  } catch (e) {
+    loadingText.innerText = "Failed to load menu";
+    console.error(e);
   }
 }
 
-/* =================================================
-   INIT MENU
-   ================================================= */
+/* RENDER */
+function renderMenu(data) {
+  loadingText.remove();
+  menuBox.style.display = "block";
 
-function initMenu(data) {
-  const r = data.restaurant || {};
+  menuLogo.src = data.restaurant.logo_url || "assets/logo1.png";
+  menuName.innerText = data.restaurant.name || "Menu";
 
-  // ❌ MENU OFF
-  if (!isMenuActive(r)) {
-    location.href = "menu-off.html?slug=" + slug;
-    return;
-  }
-
-  hideSkeletons();
-
-  // Header
-  menuLogo.src = r.logo_url || "assets/logo1.png";
-  menuLogo.onerror = () => (menuLogo.src = "assets/logo1.png");
-  menuName.innerText = r.name || "Menu";
-
-  renderCategories(data.categories || [], data.products || []);
-  initBannerSlider();
+  renderCategories(data.categories, data.products);
+  startBanner();
 }
 
-/* =================================================
-   CATEGORIES
-   ================================================= */
-
-function renderCategories(categories, products) {
+function renderCategories(cats, products) {
   categoriesDiv.innerHTML = "";
 
-  if (!categories.length) {
-    productsDiv.innerHTML = "<p>No categories</p>";
-    return;
-  }
+  cats.forEach((c, i) => {
+    const btn = document.createElement("div");
+    btn.className = "category" + (i === 0 ? " active" : "");
+    btn.innerText = c.name;
 
-  categories.forEach((cat, i) => {
-    const el = document.createElement("div");
-    el.className = "category" + (i === 0 ? " active" : "");
-    el.innerText = cat.name;
-
-    el.onclick = () => {
+    btn.onclick = () => {
       document.querySelectorAll(".category")
-        .forEach(c => c.classList.remove("active"));
-      el.classList.add("active");
-      renderProducts(cat, products);
+        .forEach(x => x.classList.remove("active"));
+      btn.classList.add("active");
+      renderProducts(c, products);
     };
 
-    categoriesDiv.appendChild(el);
+    categoriesDiv.appendChild(btn);
   });
 
-  renderProducts(categories[0], products);
+  renderProducts(cats[0], products);
 }
 
-/* =================================================
-   PRODUCTS
-   ================================================= */
-
-function renderProducts(category, products) {
+function renderProducts(cat, products) {
   productsDiv.innerHTML = "";
 
-  const cid = norm(category.id);
-  const cname = norm(category.name);
-
-  const list = products.filter(p => {
-    const pc =
-      norm(p.categoryId) ||
-      norm(p.category_id) ||
-      norm(p.category);
-    return pc === cid || pc === cname;
-  });
+  const list = products.filter(
+    p => norm(p.categoryId) === norm(cat.id)
+  );
 
   if (!list.length) {
     productsDiv.innerHTML = "<p>No products</p>";
@@ -174,56 +84,31 @@ function renderProducts(category, products) {
   }
 
   list.forEach(p => {
-    const isVeg = norm(p.veg) !== "nonveg";
-
-    const card = document.createElement("div");
-    card.className = "product";
-
-    card.innerHTML = `
-      <img src="${p.image}"
-           loading="lazy"
-           onload="this.classList.add('loaded')"
-           onerror="this.src='assets/placeholder.png'">
-
+    const div = document.createElement("div");
+    div.className = "product";
+    div.innerHTML = `
+      <img src="${p.image || "assets/placeholder.png"}">
       <div class="product-info">
-        <div class="product-title">
-          <span class="veg-dot ${isVeg ? "veg" : "nonveg"}"></span>
-          <h3>${p.name}</h3>
-        </div>
-
+        <h3>${p.name}</h3>
         <p>${p.desc || ""}</p>
-
-        <div class="price-row">
-          <span class="price">₹${p.price}</span>
-        </div>
+        <span class="price">₹${p.price}</span>
       </div>
     `;
-
-    productsDiv.appendChild(card);
+    productsDiv.appendChild(div);
   });
 }
 
-/* =================================================
-   BANNER SLIDER
-   ================================================= */
+/* BANNER SLIDER */
+function startBanner() {
+  const imgs = document.querySelectorAll(".banner-img");
+  if (imgs.length < 2) return;
 
-function initBannerSlider() {
-  const banners = document.querySelectorAll(".banner-img");
-  if (banners.length <= 1) return;
-
-  let index = 0;
+  let i = 0;
   setInterval(() => {
-    banners[index].classList.remove("active");
-    index = (index + 1) % banners.length;
-    banners[index].classList.add("active");
+    imgs[i].classList.remove("active");
+    i = (i + 1) % imgs.length;
+    imgs[i].classList.add("active");
   }, 3500);
 }
 
-/* =================================================
-   START
-   ================================================= */
-
-document.addEventListener("DOMContentLoaded", () => {
-  loadMenu();
-});
-
+loadMenu();
