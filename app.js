@@ -9,7 +9,7 @@ const slug = params.get("slug") || "barfmalai";
 
 /* ---------- API ---------- */
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbxC1ntR-pFyjgjROeeyyI-Pa93KlF-DLNChJSS2MGQ6cCTIQSPznzH_VBaQPUOlBHb3/exec?slug=" +
+  "https://script.google.com/macros/s/AKfycbz7R2QyeInZ8_-N2R5JmFv_DkXaUyCFjQiGO55ueYaFeGaBui2rJ-BKNJFV9xaIaLK7/exec?slug=" +
   encodeURIComponent(slug) +
   "&t=" + Date.now(); // 🔥 cache-buster
 
@@ -226,3 +226,4 @@ function initBannerSlider() {
 document.addEventListener("DOMContentLoaded", () => {
   loadMenu();
 });
+
