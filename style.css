@@ -103,14 +103,15 @@ body{
 }
 
 /* 🔥 IMAGE – FINAL FIX (NO DEFAULT BLUR) */
-.product-img {
-  width: 88px;
-  height: 88px;
-  border-radius: 16px;
-  object-fit: cover;
-  filter: blur(8px);
-  transform: scale(1.05);
-  transition: filter .35s ease, transform .35s ease;
+.product img{
+  width:88px;
+  height:88px;
+  border-radius:16px;
+  object-fit:cover;
+  box-shadow:0 6px 14px rgba(0,0,0,.25);
+  background:#eee;
+  filter: none;
+  transform: none;
 }
 
 .product-img.loaded {
@@ -339,6 +340,7 @@ footer{
   font-size:13px;
   opacity:.65;
 }
+
 
 
 
