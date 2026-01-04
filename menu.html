@@ -3,41 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Barf Malai Catalogue</title>
-
+<title>Menu</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div id="menu">
+<p id="loadingText" style="text-align:center;color:#f5d27a;margin-top:40px">
+  Loading menu…
+</p>
 
-  <!-- HEADER -->
+<div id="menu" style="display:none">
+
   <div class="menu-header">
-    <img id="menuLogo" alt="Logo">
-    <h2 id="menuName">Menu</h2>
+    <img id="menuLogo">
+    <h2 id="menuName"></h2>
   </div>
 
-  <!-- BANNER SLIDER -->
+  <!-- Banner -->
   <div class="banner-slider">
     <img src="assets/banner1.jpg" class="banner-img active">
     <img src="assets/banner2.jpg" class="banner-img">
   </div>
 
-  <!-- CATEGORIES -->
-  <div class="category-wrap">
-    <div id="categories"></div>
-  </div>
-
-  <!-- SKELETON -->
-  <div id="skeletons"></div>
-
-  <!-- PRODUCTS -->
+  <div id="categories"></div>
   <div id="products"></div>
 
   <footer>Powered by <b>Go Digital</b></footer>
 </div>
 
-<script src="app.js"></script>
+<script src="app.js?v=1"></script>
 </body>
 </html>
