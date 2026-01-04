@@ -1,5 +1,5 @@
 /* ===============================
-   DIGITAL MENU – FINAL PRODUCTION
+   DIGITAL MENU – FINAL STABLE
    =============================== */
 
 /* ---------- SLUG ---------- */
@@ -84,59 +84,42 @@ async function loadMenu() {
 }
 
 /* ===============================
-   INIT MENU (FINAL FIXED)
+   INIT MENU (SAFE)
    =============================== */
 function initMenu(data) {
-  // 🔒 Step 1: Clean previous state
   hideSkeletons();
   if (loadingText) loadingText.remove();
 
-  // 🔒 Step 2: Force menu hidden before render
-  if (menuBox) {
-    menuBox.style.display = "none";
-  }
+  if (menuBox) menuBox.style.display = "none";
 
   const r = data.restaurant || {};
 
-  // 🔒 Step 3: Logo safe load
   if (menuLogo) {
     menuLogo.src = r.logo_url || "assets/logo1.png";
-    menuLogo.onload = () => {};
-    menuLogo.onerror = () => {
-      menuLogo.src = "assets/logo1.png";
-    };
+    menuLogo.onerror = () => (menuLogo.src = "assets/logo1.png");
   }
 
-  // 🔒 Step 4: Name
   if (menuName) {
     menuName.innerText = r.name || "Menu";
   }
 
-  // 🔒 Step 5: Cart plan check
   CART_ENABLED = ["phase2", "phase3"].includes(norm(r.plan));
 
-  // 🔒 Step 6: Build PRODUCT MAP (critical)
   PRODUCT_MAP = {};
   (data.products || []).forEach(p => {
     PRODUCT_MAP[p.id] = p;
   });
 
-  // 🔒 Step 7: Render categories & products FIRST
   renderCategories(data.categories || [], data.products || []);
 
-  // 🔒 Step 8: Init cart bar AFTER render
-  if (CART_ENABLED) {
-    initCartBar();
-  }
+  if (CART_ENABLED) initCartBar();
 
-  // 🔥 Step 9: SHOW menu in next frame (THIS FIXES REFRESH BUG)
   requestAnimationFrame(() => {
-    if (menuBox) {
-      menuBox.style.display = "block";
-    }
+    if (menuBox) menuBox.style.display = "block";
   });
-}
 
+  initBannerSlider(); // ✅ DOM safe
+}
 
 /* ===============================
    CATEGORIES
@@ -189,13 +172,9 @@ function renderProducts(category, products) {
     return;
   }
 
-  const isVeg = String(p.veg).toLowerCase() === "veg";
+  list.forEach(p => {
+    const isVeg = String(p.veg).toLowerCase() === "veg";
 
-<h3>
-  <span class="veg-dot ${isVeg ? 'veg' : 'nonveg'}"></span>
-  ${p.name}
-</h3>
-   
     const card = document.createElement("div");
     card.className = "product";
 
@@ -206,11 +185,10 @@ function renderProducts(category, products) {
            onerror="this.src='assets/placeholder.png'">
 
       <div class="product-info">
-
-        <div class="product-title">
-          <img class="veg-icon" src="${vegIcon}">
-          <h3>${p.name}</h3>
-        </div>
+        <h3>
+          <span class="veg-dot ${isVeg ? "veg" : "nonveg"}"></span>
+          ${p.name}
+        </h3>
 
         <p>${p.desc || ""}</p>
 
@@ -234,9 +212,8 @@ function renderProducts(category, products) {
   });
 }
 
-
 /* ===============================
-   CART LOGIC (FINAL FIX)
+   CART
    =============================== */
 window.changeQty = function (id, diff) {
   const p = PRODUCT_MAP[id];
@@ -245,17 +222,10 @@ window.changeQty = function (id, diff) {
   let item = cart.find(i => i.id === id);
 
   if (!item && diff > 0) {
-    cart.push({
-      id: p.id,
-      name: p.name,
-      price: Number(p.price),
-      qty: 1
-    });
+    cart.push({ id:p.id, name:p.name, price:+p.price, qty:1 });
   } else if (item) {
     item.qty += diff;
-    if (item.qty <= 0) {
-      cart = cart.filter(i => i.id !== id);
-    }
+    if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
   }
 
   document.getElementById("q_" + id).innerText =
@@ -264,9 +234,6 @@ window.changeQty = function (id, diff) {
   updateCartBar();
 };
 
-/* ===============================
-   CART BAR
-   =============================== */
 function initCartBar() {
   if ($("cartBar")) return;
 
@@ -292,32 +259,22 @@ window.goCheckout = function () {
   location.href = "checkout.html?slug=" + slug;
 };
 
-/* ===== IMAGE BANNER SLIDER ===== */
-let bannerIndex = 0;
-const banners = document.querySelectorAll(".banner-img");
+/* ===============================
+   BANNER SLIDER (SAFE)
+   =============================== */
+function initBannerSlider() {
+  const banners = document.querySelectorAll(".banner-img");
+  if (banners.length <= 1) return;
 
-if (banners.length > 1) {
+  let index = 0;
   setInterval(() => {
-    banners[bannerIndex].classList.remove("active");
-    bannerIndex = (bannerIndex + 1) % banners.length;
-    banners[bannerIndex].classList.add("active");
+    banners[index].classList.remove("active");
+    index = (index + 1) % banners.length;
+    banners[index].classList.add("active");
   }, 3500);
 }
-
 
 /* ===============================
    START
    =============================== */
 loadMenu();
-
-
-
-
-
-
-
-
-
-
-
-
