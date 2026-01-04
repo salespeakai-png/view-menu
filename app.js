@@ -251,6 +251,12 @@ window.goCheckout = function () {
   location.href = "checkout.html?slug=" + slug;
 };
 
+
+/* ===============================
+   START
+   =============================== */
+loadMenu();
+
 /* ===== IMAGE BANNER SLIDER ===== */
 let bannerIndex = 0;
 const banners = document.querySelectorAll(".banner-img");
@@ -262,12 +268,6 @@ if (banners.length > 1) {
     banners[bannerIndex].classList.add("active");
   }, 3500);
 }
-
-
-/* ===============================
-   START
-   =============================== */
-loadMenu();
 
 
 
