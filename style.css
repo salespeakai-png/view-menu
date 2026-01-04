@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap");
+
 :root{
   --theme-bg:#2a070a;
   --theme-gold:#d4af37;
@@ -134,9 +136,13 @@ body{
 
 /* TEXT */
 .product-info h3{
+  font-family: "Cinzel", serif;
   font-size:15px;
-  color:#222;
+  font-weight:700;
+  letter-spacing:0.5px;
+  color:#2a070a;
 }
+
 
 .product-info p{
   font-size:13px;
@@ -282,6 +288,7 @@ footer{
   font-size:13px;
   opacity:.65;
 }
+
 
 
 
