@@ -110,6 +110,8 @@ body{
   object-fit:cover;
   box-shadow:0 6px 14px rgba(0,0,0,.25);
   background:#eee;
+  filter: none;
+  transform: none;
 }
 
 /* ================= INFO ================= */
@@ -126,13 +128,15 @@ body{
   gap:6px;
 }
 
-/* VEG ICON FIX */
 .veg-icon{
   width:14px !important;
   height:14px !important;
+  display:inline-block !important;
+  object-fit:contain;
   filter:none !important;
-  flex-shrink:0;
+  opacity:1 !important;
 }
+
 
 /* TEXT */
 .product-info h3{
@@ -322,6 +326,7 @@ footer{
   font-size:13px;
   opacity:.65;
 }
+
 
 
 
