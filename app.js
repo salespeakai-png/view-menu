@@ -1,212 +1,278 @@
-/* =====================================
-   PHASE 3 – FINAL PREMIUM MENU LOGIC
-   ===================================== */
+/* ===============================
+   DIGITAL MENU – FINAL PRODUCTION
+   =============================== */
 
-/* 🔹 GET RESTAURANT SLUG */
+/* ---------- SLUG ---------- */
 const params = new URLSearchParams(window.location.search);
 const slug = params.get("slug") || "barfmalai";
 
-/* 🔹 API URL (Apps Script) */
+/* ---------- API ---------- */
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbwh-eNLy81JK6AvwQQF-H7flEDANpUjHTv7Y2ubdnqGRO4IzhRf6HT1AZSzkqCqiyM8/exec?slug=" + slug;
+  "https://script.google.com/macros/s/AKfycbxC1ntR-pFyjgjROeeyyI-Pa93KlF-DLNChJSS2MGQ6cCTIQSPznzH_VBaQPUOlBHb3/exec?slug=" +
+  encodeURIComponent(slug);
 
-/* 🔹 DOM ELEMENTS */
-const menuLogo = document.getElementById("menuLogo");
-const menuName = document.getElementById("menuName");
-const categoriesDiv = document.getElementById("categories");
-const productsDiv = document.getElementById("products");
-const skeletonsDiv = document.getElementById("skeletons");
-const catHint = document.querySelector(".cat-hint");
+/* ---------- DOM ---------- */
+const $ = id => document.getElementById(id);
 
-/* =====================================
-   SKELETON LOADER
-   ===================================== */
+const menuBox = $("menu");
+const menuLogo = $("menuLogo");
+const menuName = $("menuName");
+const categoriesDiv = $("categories");
+const productsDiv = $("products");
+const skeletonsDiv = $("skeletons");
+const loadingText = $("loadingText");
+
+/* ---------- STATE ---------- */
+let CART_ENABLED = false;
+let cart = [];
+let PRODUCT_MAP = {};
+
+/* ---------- UTILS ---------- */
+const norm = v => String(v ?? "").trim().toLowerCase();
+
+/* ===============================
+   SKELETON
+   =============================== */
 function showSkeletons(count = 4) {
   if (!skeletonsDiv) return;
   skeletonsDiv.innerHTML = "";
+  skeletonsDiv.style.display = "block";
 
   for (let i = 0; i < count; i++) {
-    const s = document.createElement("div");
-    s.className = "skeleton-card";
-    s.innerHTML = `
-      <div class="skeleton-img"></div>
-      <div class="skeleton-lines">
-        <div class="skeleton-line"></div>
-        <div class="skeleton-line short"></div>
-        <div class="skeleton-line price"></div>
-      </div>
-    `;
-    skeletonsDiv.appendChild(s);
+    skeletonsDiv.innerHTML += `
+      <div class="skeleton-card">
+        <div class="skeleton-img"></div>
+        <div class="skeleton-lines">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line price"></div>
+        </div>
+      </div>`;
   }
 }
 
 function hideSkeletons() {
-  if (skeletonsDiv) skeletonsDiv.innerHTML = "";
+  if (!skeletonsDiv) return;
+  skeletonsDiv.style.display = "none";
+  skeletonsDiv.innerHTML = "";
 }
 
-/* =====================================
-   IMAGE LAZY LOAD OBSERVER
-   ===================================== */
-const imgObserver = new IntersectionObserver(
-  entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const img = entry.target;
-        img.src = img.dataset.src;
-        img.onload = () => img.classList.add("loaded");
-        img.onerror = () => (img.src = "assets/placeholder.png");
-        imgObserver.unobserve(img);
-      }
-    });
-  },
-  { threshold: 0.2 }
-);
+/* ===============================
+   LOAD MENU
+   =============================== */
+async function loadMenu() {
+  if (loadingText) loadingText.style.display = "block";
+  showSkeletons();
 
-/* =====================================
-   INITIAL LOAD
-   ===================================== */
-showSkeletons(4);
+  try {
+    const res = await fetch(API_URL, { cache: "no-store" });
+    const data = await res.json();
 
-/* =====================================
-   FETCH MENU DATA
-   ===================================== */
-fetch(API_URL)
-  .then(res => res.json())
-  .then(data => {
-    if (data.error === "MENU_OFF") {
-      window.location.href = "menu-off.html?slug=" + slug;
+    if (data?.error === "MENU_OFF") {
+      location.href = "menu-off.html?slug=" + slug;
       return;
     }
-
-    if (data.error) {
-      document.body.innerHTML = data.error;
-      return;
-    }
+    if (!data || data.error) throw new Error("Invalid API response");
 
     initMenu(data);
-  })
-  .catch(() => {
-    document.body.innerHTML = "Unable to load menu. Please try again.";
-  });
 
-/* =====================================
-   INIT MENU
-   ===================================== */
-function initMenu(data) {
-  const r = data.restaurant;
-
-  /* HEADER */
-  menuLogo.src = r.logo_url;
-  menuLogo.onerror = () => (menuLogo.src = "assets/placeholder.png");
-  menuName.innerText = r.name;
-
-  /* 🎨 APPLY THEME COLOR FROM SHEET */
-  if (r.theme_color) {
-    document.documentElement.style.setProperty(
-      "--theme-bg",
-      r.theme_color
-    );
+  } catch (err) {
+    console.error("MENU ERROR:", err);
+    hideSkeletons();
+    if (loadingText) loadingText.innerText = "Failed to load menu";
   }
-
-  renderCategories(data.categories, data.products);
 }
 
-/* =====================================
-   RENDER CATEGORIES
-   ===================================== */
+/* ===============================
+   INIT MENU
+   =============================== */
+function initMenu(data) {
+  hideSkeletons();
+  if (loadingText) loadingText.remove();
+  if (menuBox) menuBox.style.display = "block";
+
+  const r = data.restaurant || {};
+
+  if (menuLogo) {
+    menuLogo.src = r.logo_url || "assets/logo1.png";
+    menuLogo.onerror = () => (menuLogo.src = "assets/logo1.png");
+  }
+
+  if (menuName) {
+    menuName.innerText = r.name || "Menu";
+  }
+
+  CART_ENABLED = ["phase2", "phase3"].includes(norm(r.plan));
+
+  // 🔥 PRODUCT MAP (CRITICAL FIX)
+  PRODUCT_MAP = {};
+  (data.products || []).forEach(p => {
+    PRODUCT_MAP[p.id] = p;
+  });
+
+  renderCategories(data.categories || [], data.products || []);
+  if (CART_ENABLED) initCartBar();
+}
+
+/* ===============================
+   CATEGORIES
+   =============================== */
 function renderCategories(categories, products) {
   categoriesDiv.innerHTML = "";
 
-  if (!categories || categories.length === 0) {
-    categoriesDiv.innerHTML = "<p>No categories available</p>";
+  if (!categories.length) {
+    productsDiv.innerHTML = "<p>No categories</p>";
     return;
   }
 
-  categories.forEach((cat, index) => {
+  categories.forEach((cat, i) => {
     const el = document.createElement("div");
-    el.className = "category" + (index === 0 ? " active" : "");
+    el.className = "category" + (i === 0 ? " active" : "");
     el.innerText = cat.name;
 
     el.onclick = () => {
-      document
-        .querySelectorAll(".category")
+      document.querySelectorAll(".category")
         .forEach(c => c.classList.remove("active"));
-
       el.classList.add("active");
-
-      el.scrollIntoView({
-        behavior: "smooth",
-        inline: "center",
-        block: "nearest"
-      });
-
-      renderProducts(cat.id, products);
+      renderProducts(cat, products);
     };
 
     categoriesDiv.appendChild(el);
   });
 
-  /* SLIDE HINT AUTO HIDE */
-  if (catHint) {
-    categoriesDiv.addEventListener("scroll", () => {
-      if (categoriesDiv.scrollLeft > 10) {
-        catHint.style.display = "none";
-      }
-    });
+  renderProducts(categories[0], products);
+}
+
+/* ===============================
+   PRODUCTS
+   =============================== */
+function renderProducts(category, products) {
+  productsDiv.innerHTML = "";
+
+  const cid = norm(category.id);
+  const cname = norm(category.name);
+
+  const list = products.filter(p => {
+    const pc =
+      norm(p.categoryId) ||
+      norm(p.category_id) ||
+      norm(p.category);
+    return pc === cid || pc === cname;
+  });
+
+  if (!list.length) {
+    productsDiv.innerHTML = "<p>No products</p>";
+    return;
   }
 
-  /* MICRO AUTO SLIDE HINT */
-  setTimeout(() => {
-    categoriesDiv.scrollLeft = 40;
-  }, 600);
+  list.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "product";
 
-  renderProducts(categories[0].id, products);
-}
+    card.innerHTML = `
+      <img src="${p.image}" loading="lazy"
+           onerror="this.src='assets/placeholder.png'">
 
-/* =====================================
-   RENDER PRODUCTS
-   ===================================== */
-function renderProducts(categoryId, products) {
-  /* Smooth transition */
-  productsDiv.style.opacity = "0";
+      <div class="product-info">
+        <h3>${p.name}</h3>
+        <p>${p.desc || ""}</p>
 
-  setTimeout(() => {
-    productsDiv.innerHTML = "";
-    hideSkeletons();
-
-    const filteredProducts = products.filter(
-      p => String(p.categoryId) === String(categoryId)
-    );
-
-    if (filteredProducts.length === 0) {
-      productsDiv.innerHTML = "<p>No products available</p>";
-      productsDiv.style.opacity = "1";
-      return;
-    }
-
-    filteredProducts.forEach(p => {
-      const card = document.createElement("div");
-      card.className = "product";
-
-      card.innerHTML = `
-        <img data-src="${p.image}" src="assets/placeholder.png">
-        <div class="product-info">
-          <div class="product-title">
-            <span class="veg-dot ${p.veg === "nonveg" ? "nonveg" : ""}"></span>
-            <h3>${p.name}</h3>
-          </div>
-          <p>${p.desc || ""}</p>
-          <div class="price">₹${p.price}</div>
+        <div class="price-row">
+          <span class="price">₹${p.price}</span>
+          ${
+            CART_ENABLED
+              ? `<div class="qty">
+                   <button onclick="changeQty(${p.id},-1)">−</button>
+                   <span id="q_${p.id}">0</span>
+                   <button onclick="changeQty(${p.id},1)">+</button>
+                 </div>`
+              : ""
+          }
         </div>
-      `;
-
-      productsDiv.appendChild(card);
-
-      const img = card.querySelector("img");
-      imgObserver.observe(img);
-    });
-
-    productsDiv.style.opacity = "1";
-    document.getElementById("loadingText")?.remove();
-  }, 120);
+      </div>`;
+    productsDiv.appendChild(card);
+  });
 }
+
+/* ===============================
+   CART LOGIC (FINAL FIX)
+   =============================== */
+window.changeQty = function (id, diff) {
+  const p = PRODUCT_MAP[id];
+  if (!p) return;
+
+  let item = cart.find(i => i.id === id);
+
+  if (!item && diff > 0) {
+    cart.push({
+      id: p.id,
+      name: p.name,
+      price: Number(p.price),
+      qty: 1
+    });
+  } else if (item) {
+    item.qty += diff;
+    if (item.qty <= 0) {
+      cart = cart.filter(i => i.id !== id);
+    }
+  }
+
+  document.getElementById("q_" + id).innerText =
+    cart.find(i => i.id === id)?.qty || 0;
+
+  updateCartBar();
+};
+
+/* ===============================
+   CART BAR
+   =============================== */
+function initCartBar() {
+  if ($("cartBar")) return;
+
+  const bar = document.createElement("div");
+  bar.id = "cartBar";
+  bar.innerHTML = `
+    <span id="cartText">0 items</span>
+    <button onclick="goCheckout()">Checkout</button>`;
+  document.body.appendChild(bar);
+}
+
+function updateCartBar() {
+  const bar = $("cartBar");
+  if (!bar) return;
+
+  const total = cart.reduce((s, i) => s + i.qty, 0);
+  bar.style.display = total ? "flex" : "none";
+  $("cartText").innerText = total + " items";
+}
+
+window.goCheckout = function () {
+  localStorage.setItem("cart", JSON.stringify(cart));
+  location.href = "checkout.html?slug=" + slug;
+};
+
+
+/* ===============================
+   START
+   =============================== */
+loadMenu();
+
+/* ===== IMAGE BANNER SLIDER ===== */
+let bannerIndex = 0;
+const banners = document.querySelectorAll(".banner-img");
+
+if (banners.length > 1) {
+  setInterval(() => {
+    banners[bannerIndex].classList.remove("active");
+    bannerIndex = (bannerIndex + 1) % banners.length;
+    banners[bannerIndex].classList.add("active");
+  }, 3500);
+}
+
+
+
+
+
+
+
+
