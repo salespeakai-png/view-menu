@@ -251,10 +251,24 @@ window.goCheckout = function () {
   location.href = "checkout.html?slug=" + slug;
 };
 
+/* ===== IMAGE BANNER SLIDER ===== */
+let bannerIndex = 0;
+const banners = document.querySelectorAll(".banner-img");
+
+if (banners.length > 1) {
+  setInterval(() => {
+    banners[bannerIndex].classList.remove("active");
+    bannerIndex = (bannerIndex + 1) % banners.length;
+    banners[bannerIndex].classList.add("active");
+  }, 3500);
+}
+
+
 /* ===============================
    START
    =============================== */
 loadMenu();
+
 
 
 
