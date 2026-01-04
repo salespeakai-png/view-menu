@@ -299,7 +299,7 @@ body{
 /* ================= IMAGE BANNER ================= */
 
 .banner-slider{
-  max-width:720px;
+  max-width:1080px;
   margin:12px auto 22px;
   position:relative;
   border-radius:18px;
@@ -338,6 +338,7 @@ footer{
   font-size:13px;
   opacity:.65;
 }
+
 
 
 
