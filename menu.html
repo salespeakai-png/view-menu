@@ -10,35 +10,22 @@
 
 <body>
 
-<div id="menu" style="display:none">
+<div id="menu">
 
   <div class="menu-header">
     <img id="menuLogo">
-    <h2 id="menuName"></h2>
+    <h2 id="menuName">Loading...</h2>
   </div>
 
-  <!-- Banner -->
-  <div class="banner-slider">
-    <img src="assets/banner1.jpg" class="banner-img active">
-    <img src="assets/banner2.jpg" class="banner-img">
-  </div>
-
-  <!-- Categories -->
-  <div class="category-wrap">
-    <div id="categories"></div>
-  </div>
-
-  <!-- Skeleton -->
+  <div id="categories"></div>
   <div id="skeletons"></div>
-
-  <!-- Products -->
   <div id="products"></div>
 
   <footer>Powered by <b>Go Digital</b></footer>
 </div>
 
-<!-- 🔥 CACHE SAFE LOAD -->
-<script src="app.js?v=20260107" defer></script>
+<!-- ❗ NO defer, NO DOMContentLoaded -->
+<script src="./app.js"></script>
 
 </body>
 </html>
