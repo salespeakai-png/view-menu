@@ -280,6 +280,40 @@ body{
   font-weight:700;
 }
 
+/* ================= IMAGE BANNER ================= */
+
+.banner-slider{
+  max-width:720px;
+  margin:12px auto 22px;
+  position:relative;
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);
+}
+
+.banner-img{
+  width:100%;
+  height:220px;
+  object-fit:cover;
+  display:none;
+}
+
+.banner-img.active{
+  display:block;
+  animation:fadeSlide .8s ease;
+}
+
+@keyframes fadeSlide{
+  from{opacity:.4;transform:scale(1.04)}
+  to{opacity:1;transform:scale(1)}
+}
+
+/* Mobile */
+@media(max-width:600px){
+  .banner-img{height:180px;}
+}
+
+
 /* ================= FOOTER ================= */
 
 footer{
@@ -288,6 +322,7 @@ footer{
   font-size:13px;
   opacity:.65;
 }
+
 
 
 
