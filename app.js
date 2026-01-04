@@ -1,15 +1,26 @@
 /* ===============================
-   DIGITAL MENU – FINAL STABLE
+   DIGITAL MENU – FINAL PRODUCTION
    =============================== */
+
+/* ---------- DOM READY ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  boot();
+});
+
+/* ---------- BOOT ---------- */
+function boot() {
+  setTimeout(loadMenu, 50); // mobile safety
+}
 
 /* ---------- SLUG ---------- */
 const params = new URLSearchParams(window.location.search);
 const slug = params.get("slug") || "barfmalai";
 
-/* ---------- API ---------- */
+/* ---------- API (CACHE SAFE) ---------- */
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbxC1ntR-pFyjgjROeeyyI-Pa93KlF-DLNChJSS2MGQ6cCTIQSPznzH_VBaQPUOlBHb3/exec?slug=" +
-  encodeURIComponent(slug);
+  "https://script.google.com/macros/s/AKfycbxC1ntR-pFyjgjROeeyyI-Pa93KlF-DLNChJSS2MGQ6cCTIQSPznzH_VBaQPUOlBHb3/exec" +
+  "?slug=" + encodeURIComponent(slug) +
+  "&_=" + Date.now();
 
 /* ---------- DOM ---------- */
 const $ = id => document.getElementById(id);
@@ -20,7 +31,6 @@ const menuName = $("menuName");
 const categoriesDiv = $("categories");
 const productsDiv = $("products");
 const skeletonsDiv = $("skeletons");
-const loadingText = $("loadingText");
 
 /* ---------- STATE ---------- */
 let CART_ENABLED = false;
@@ -34,7 +44,6 @@ const norm = v => String(v ?? "").trim().toLowerCase();
    SKELETON
    =============================== */
 function showSkeletons(count = 4) {
-  if (!skeletonsDiv) return;
   skeletonsDiv.innerHTML = "";
   skeletonsDiv.style.display = "block";
 
@@ -52,73 +61,67 @@ function showSkeletons(count = 4) {
 }
 
 function hideSkeletons() {
-  if (!skeletonsDiv) return;
   skeletonsDiv.style.display = "none";
   skeletonsDiv.innerHTML = "";
 }
 
 /* ===============================
-   LOAD MENU
+   LOAD MENU (HARD SAFE)
    =============================== */
 async function loadMenu() {
-  if (loadingText) loadingText.style.display = "block";
   showSkeletons();
 
   try {
-    const res = await fetch(API_URL, { cache: "no-store" });
+    const res = await fetch(API_URL, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache" }
+    });
+
     const data = await res.json();
 
     if (data?.error === "MENU_OFF") {
       location.href = "menu-off.html?slug=" + slug;
       return;
     }
-    if (!data || data.error) throw new Error("Invalid API response");
+
+    if (!data || data.error) throw "Invalid API";
 
     initMenu(data);
 
-  } catch (err) {
-    console.error("MENU ERROR:", err);
-    hideSkeletons();
-    if (loadingText) loadingText.innerText = "Failed to load menu";
+  } catch (e) {
+    console.error("MENU LOAD FAILED:", e);
+    skeletonsDiv.innerHTML =
+      "<p style='color:#fff;text-align:center'>Menu unavailable</p>";
   }
 }
 
 /* ===============================
-   INIT MENU (SAFE)
+   INIT MENU (FINAL SAFE)
    =============================== */
 function initMenu(data) {
   hideSkeletons();
-  if (loadingText) loadingText.remove();
-
-  if (menuBox) menuBox.style.display = "none";
 
   const r = data.restaurant || {};
 
-  if (menuLogo) {
-    menuLogo.src = r.logo_url || "assets/logo1.png";
-    menuLogo.onerror = () => (menuLogo.src = "assets/logo1.png");
-  }
-
-  if (menuName) {
-    menuName.innerText = r.name || "Menu";
-  }
+  menuLogo.src = r.logo_url || "assets/logo1.png";
+  menuLogo.onerror = () => (menuLogo.src = "assets/logo1.png");
+  menuName.innerText = r.name || "Menu";
 
   CART_ENABLED = ["phase2", "phase3"].includes(norm(r.plan));
 
   PRODUCT_MAP = {};
-  (data.products || []).forEach(p => {
-    PRODUCT_MAP[p.id] = p;
-  });
+  (data.products || []).forEach(p => PRODUCT_MAP[p.id] = p);
 
   renderCategories(data.categories || [], data.products || []);
 
   if (CART_ENABLED) initCartBar();
 
+  // 🔥 FORCE SHOW MENU (NO BLANK)
   requestAnimationFrame(() => {
-    if (menuBox) menuBox.style.display = "block";
+    menuBox.style.display = "block";
   });
 
-  initBannerSlider(); // ✅ DOM safe
+  initBannerSlider();
 }
 
 /* ===============================
@@ -160,10 +163,7 @@ function renderProducts(category, products) {
   const cname = norm(category.name);
 
   const list = products.filter(p => {
-    const pc =
-      norm(p.categoryId) ||
-      norm(p.category_id) ||
-      norm(p.category);
+    const pc = norm(p.categoryId || p.category_id || p.category);
     return pc === cid || pc === cname;
   });
 
@@ -173,8 +173,6 @@ function renderProducts(category, products) {
   }
 
   list.forEach(p => {
-    const isVeg = String(p.veg).toLowerCase() === "veg";
-
     const card = document.createElement("div");
     card.className = "product";
 
@@ -185,16 +183,11 @@ function renderProducts(category, products) {
            onerror="this.src='assets/placeholder.png'">
 
       <div class="product-info">
-        <h3>
-          <span class="veg-dot ${isVeg ? "veg" : "nonveg"}"></span>
-          ${p.name}
-        </h3>
-
+        <h3>${p.name}</h3>
         <p>${p.desc || ""}</p>
 
         <div class="price-row">
           <span class="price">₹${p.price}</span>
-
           ${
             CART_ENABLED
               ? `<div class="qty">
@@ -205,8 +198,7 @@ function renderProducts(category, products) {
               : ""
           }
         </div>
-      </div>
-    `;
+      </div>`;
 
     productsDiv.appendChild(card);
   });
@@ -228,9 +220,7 @@ window.changeQty = function (id, diff) {
     if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
   }
 
-  document.getElementById("q_" + id).innerText =
-    cart.find(i => i.id === id)?.qty || 0;
-
+  $("q_" + id).innerText = cart.find(i => i.id === id)?.qty || 0;
   updateCartBar();
 };
 
@@ -247,38 +237,27 @@ function initCartBar() {
 
 function updateCartBar() {
   const bar = $("cartBar");
-  if (!bar) return;
-
-  const total = cart.reduce((s, i) => s + i.qty, 0);
+  const total = cart.reduce((s,i)=>s+i.qty,0);
   bar.style.display = total ? "flex" : "none";
   $("cartText").innerText = total + " items";
 }
 
-window.goCheckout = function () {
+window.goCheckout = () => {
   localStorage.setItem("cart", JSON.stringify(cart));
   location.href = "checkout.html?slug=" + slug;
 };
 
 /* ===============================
-   BANNER SLIDER (SAFE)
+   BANNER SLIDER
    =============================== */
 function initBannerSlider() {
   const banners = document.querySelectorAll(".banner-img");
   if (banners.length <= 1) return;
 
-  let index = 0;
+  let i = 0;
   setInterval(() => {
-    banners[index].classList.remove("active");
-    index = (index + 1) % banners.length;
-    banners[index].classList.add("active");
+    banners[i].classList.remove("active");
+    i = (i + 1) % banners.length;
+    banners[i].classList.add("active");
   }, 3500);
 }
-
-/* ===============================
-   START
-   =============================== */
-document.addEventListener("DOMContentLoaded", () => {
-  loadMenu();
-});
-
-
