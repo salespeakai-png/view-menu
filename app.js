@@ -84,35 +84,59 @@ async function loadMenu() {
 }
 
 /* ===============================
-   INIT MENU
+   INIT MENU (FINAL FIXED)
    =============================== */
 function initMenu(data) {
+  // 🔒 Step 1: Clean previous state
   hideSkeletons();
   if (loadingText) loadingText.remove();
-  if (menuBox) menuBox.style.display = "block";
+
+  // 🔒 Step 2: Force menu hidden before render
+  if (menuBox) {
+    menuBox.style.display = "none";
+  }
 
   const r = data.restaurant || {};
 
+  // 🔒 Step 3: Logo safe load
   if (menuLogo) {
     menuLogo.src = r.logo_url || "assets/logo1.png";
-    menuLogo.onerror = () => (menuLogo.src = "assets/logo1.png");
+    menuLogo.onload = () => {};
+    menuLogo.onerror = () => {
+      menuLogo.src = "assets/logo1.png";
+    };
   }
 
+  // 🔒 Step 4: Name
   if (menuName) {
     menuName.innerText = r.name || "Menu";
   }
 
+  // 🔒 Step 5: Cart plan check
   CART_ENABLED = ["phase2", "phase3"].includes(norm(r.plan));
 
-  // 🔥 PRODUCT MAP (CRITICAL FIX)
+  // 🔒 Step 6: Build PRODUCT MAP (critical)
   PRODUCT_MAP = {};
   (data.products || []).forEach(p => {
     PRODUCT_MAP[p.id] = p;
   });
 
+  // 🔒 Step 7: Render categories & products FIRST
   renderCategories(data.categories || [], data.products || []);
-  if (CART_ENABLED) initCartBar();
+
+  // 🔒 Step 8: Init cart bar AFTER render
+  if (CART_ENABLED) {
+    initCartBar();
+  }
+
+  // 🔥 Step 9: SHOW menu in next frame (THIS FIXES REFRESH BUG)
+  requestAnimationFrame(() => {
+    if (menuBox) {
+      menuBox.style.display = "block";
+    }
+  });
 }
+
 
 /* ===============================
    CATEGORIES
@@ -165,13 +189,13 @@ function renderProducts(category, products) {
     return;
   }
 
-  list.forEach(p => {
-    const vegType = norm(p.veg);
-    const vegIcon =
-      vegType === "nonveg"
-        ? "assets/nonveg.png"
-        : "assets/veg.png";
+  const isVeg = String(p.veg).toLowerCase() === "veg";
 
+<h3>
+  <span class="veg-dot ${isVeg ? 'veg' : 'nonveg'}"></span>
+  ${p.name}
+</h3>
+   
     const card = document.createElement("div");
     card.className = "product";
 
@@ -285,6 +309,7 @@ if (banners.length > 1) {
    START
    =============================== */
 loadMenu();
+
 
 
 
